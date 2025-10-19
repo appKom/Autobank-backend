@@ -55,6 +55,7 @@ class BlobService(
             ByteArrayOutputStream().use { outputStream ->
                 Thumbnails.of(inputStream)
                     .size(imageResizeWidth, imageResizeHeight)
+                    .keepAspectRatio(true)
                     .outputFormat(type)
                     .toOutputStream(outputStream)
 

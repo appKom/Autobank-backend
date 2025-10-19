@@ -23,4 +23,9 @@ class CommitteeService() {
         val userdetails = authenticationService.getUserDetails()
         return UserCommitteeResponseBody(userdetails.name, userdetails.email, authenticationService.fetchUserCommittees())
     }
+
+    fun getCommitteeById(committeeId: String): Committee? {
+        return committeeRepository.findById(committeeId).orElse(null)
+
+    }
 }

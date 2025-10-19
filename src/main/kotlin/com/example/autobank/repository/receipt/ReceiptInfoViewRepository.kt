@@ -1,4 +1,4 @@
-package com.example.autobank.repository.receipt
+/*package com.example.autobank.repository.receipt
 
 import com.example.autobank.data.models.ReceiptInfo
 import org.springframework.data.domain.Page
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.stereotype.Repository
 
-@Repository
+
 interface ReceiptInfoViewRepository : JpaRepository<ReceiptInfo, Int>, JpaSpecificationExecutor<ReceiptInfo> {
 
     fun findByReceiptId(id: Int): ReceiptInfo
@@ -15,3 +15,4 @@ interface ReceiptInfoViewRepository : JpaRepository<ReceiptInfo, Int>, JpaSpecif
     fun findByUserId(pageable: Pageable, id: Int): Page<ReceiptInfo>
 
 }
+*/

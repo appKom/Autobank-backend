@@ -1,18 +1,12 @@
 package com.example.autobank.service
 
-import com.example.autobank.data.models.Attachment
-import com.example.autobank.data.models.Card
-import com.example.autobank.data.models.Payment
-import com.example.autobank.data.models.ReceiptInfo
+import com.example.autobank.data.models.*
 import com.example.autobank.data.receipt.*
-import com.example.autobank.repository.receipt.CardRepository
-import com.example.autobank.repository.receipt.PaymentRepository
-import com.example.autobank.repository.receipt.ReceiptInfoViewRepository
-import com.example.autobank.repository.receipt.ReceiptRepository
-import com.example.autobank.repository.receipt.specification.ReceiptInfoSpecification
+import com.example.autobank.data.receipt.ReceiptInfoResponseBody
+import com.example.autobank.repository.receipt.*
+import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort
 import com.example.autobank.service.MailService
@@ -34,28 +28,54 @@ class ReceiptService {
     lateinit var attachmentService: AttachmentService
 
     @Autowired
-    lateinit var cardRepository: CardRepository
-
-    @Autowired
-    lateinit var paymentRepository: PaymentRepository
-
-    @Autowired
-    lateinit var receiptInfoViewRepository: ReceiptInfoViewRepository
-
-    @Autowired
-    lateinit var paymentCardService: PaymentCardService
-
+    lateinit var committeeService: CommitteeService
     @Autowired
     lateinit var mailService: MailService
-
+    @Autowired
+    lateinit var receiptInfoRepository: ReceiptInfoRepositoryImpl
 
 
     fun createReceipt(receiptRequestBody: ReceiptRequestBody): ReceiptResponseBody {
         val user = onlineUserService.getOnlineUser() ?: throw Exception("User not found")
         val receiptinfo = receiptRequestBody.receipt ?: throw Exception("Receipt not sent")
-        receiptinfo.onlineUserId = user.id;
 
-        val storedReceipt = receiptRepository.save(receiptinfo);
+
+        val cardnumber = (receiptRequestBody.receiptPaymentInformation?.cardnumber.isNullOrEmpty()).let {
+            if (it) null else receiptRequestBody.receiptPaymentInformation?.cardnumber
+        }
+        val accountnumber = (receiptRequestBody.receiptPaymentInformation?.accountnumber.isNullOrEmpty()).let {
+            if (it) null else receiptRequestBody.receiptPaymentInformation?.accountnumber
+        }
+
+        if (cardnumber.isNullOrEmpty() && accountnumber.isNullOrEmpty()) {
+            throw Exception("Card number or account number must be provided")
+        }
+        if (cardnumber != null && accountnumber != null) {
+            throw Exception("Card and account number can not both be provided")
+        }
+
+        val committee = committeeService.getCommitteeById(receiptinfo.committee_id ?: throw Exception("Committee ID not provided"))
+            ?: throw Exception("Committee not found")
+
+
+
+        val receipt: Receipt = Receipt(
+            "",
+            receiptinfo.amount ?: throw Exception("Amount not provided"),
+            committee,
+            receiptinfo.name ?: throw Exception("Receipt name not provided"),
+            receiptinfo.description ?: throw Exception("Receipt description not provided"),
+            user,
+            emptySet(),
+            emptySet(),
+            null,
+            card_number = cardnumber,
+            account_number = accountnumber
+
+        )
+
+
+        val storedReceipt = receiptRepository.save(receipt);
 
         /**
          * Save attachments
@@ -66,7 +86,7 @@ class ReceiptService {
         try {
             attachments.forEach { attachment ->
                 val imgname = blobService.uploadFile(attachment)
-                attachmentService.createAttachment(Attachment(0, storedReceipt.id, imgname))
+                attachmentService.createAttachment(Attachment("", storedReceipt, imgname))
                 println("Attachent name: $imgname")
                 attachmentsnames.add(imgname)
             }
@@ -75,20 +95,6 @@ class ReceiptService {
             throw e;
         }
 
-        /**
-         * Save payment information
-         */
-        if (receiptRequestBody.receiptPaymentInformation != null && receiptRequestBody.receiptPaymentInformation.usedOnlineCard && receiptRequestBody.receiptPaymentInformation.cardnumber != null && receiptRequestBody.receiptPaymentInformation.cardnumber != "") {
-            val card = Card(0, storedReceipt.id, receiptRequestBody.receiptPaymentInformation.cardnumber)
-            cardRepository.save(card)
-        } else if (receiptRequestBody.receiptPaymentInformation != null && !receiptRequestBody.receiptPaymentInformation.usedOnlineCard && receiptRequestBody.receiptPaymentInformation.accountnumber != null && receiptRequestBody.receiptPaymentInformation.accountnumber != "") {
-            val payment = Payment(0, storedReceipt.id, receiptRequestBody.receiptPaymentInformation.accountnumber)
-            paymentRepository.save(payment)
-        } else {
-            throw Exception("Payment information not sent")
-        }
-
-        storedReceipt.onlineUserId = null
 
         val emailContent = """
             <h2>Detaljer for innsendt kvittering</h2>
@@ -104,13 +110,8 @@ class ReceiptService {
         """.trimIndent()
 
         mailService.sendEmail(user.email, "Receipt Submission Details", emailContent)
+        return  ReceiptResponseBody()
 
-        val response = ReceiptResponseBody()
-        response.receipt = storedReceipt
-        response.attachments = attachmentsnames.toTypedArray()
-        response.receiptPaymentInformation = receiptRequestBody.receiptPaymentInformation
-
-        return response
     }
 
     fun getAllReceiptsFromUser(from: Int, count: Int, status: String?, committeeName: String?, search: String?, sortField: String?, sortOrder: String?): ReceiptListResponseBody? {
@@ -126,17 +127,36 @@ class ReceiptService {
         }
         val pageable = PageRequest.of(from, count, sort)
 
-        val specification = ReceiptInfoSpecification(user.id, status, committeeName, search)
+        val specification = ReceiptInfoViewSpecification(user.id, status, committeeName, search)
 
-        val page: List<ReceiptInfo> = receiptInfoViewRepository.findAll(specification, pageable).toList()
-        val total: Long = receiptInfoViewRepository.count(specification)
+        val receiptPage = receiptInfoRepository.findAll(specification, pageable)
+        val total: Long = receiptPage.totalElements
 
-        return ReceiptListResponseBody(page.toTypedArray(), total)
+        val receiptResponseList = receiptPage.toList().map { receipt ->
+            ReceiptInfoResponseBody(
+                receiptId = receipt.receiptId,
+                amount = receipt.amount.toString(),
+                receiptName = receipt.receiptName,
+                receiptDescription = receipt.receiptDescription,
+                receiptCreatedAt = receipt.receiptCreatedAt.toString(),
+                committeeName = receipt.committeeName,
+                userFullname = receipt.userFullname,
+                paymentOrCard = if (receipt.accountNumber != null) "Payment" else "Card",
+                attachmentCount = receipt.attachmentCount.toInt(),
+                latestReviewStatus = receipt.latestReviewStatus.toString(),
+                latestReviewCreatedAt = receipt.latestReviewCreatedAt.toString(),
+                latestReviewComment = receipt.latestReviewComment,
+                paymentAccountNumber = receipt.accountNumber,
+                cardCardNumber = receipt.cardNumber,
+                attachments = listOf()
+            )
+        }
+        return ReceiptListResponseBody(receiptResponseList.toTypedArray(), total)
     }
 
-    fun getReceipt(id: Int): CompleteReceipt? {
+    fun getReceipt(id: String): CompleteReceipt? {
         val user = onlineUserService.getOnlineUser() ?: throw Exception("User not found")
-        val receipt = receiptInfoViewRepository.findByReceiptId(id)
+        val receipt = receiptInfoRepository.findById(id)
         if (receipt == null || receipt.userId != user.id) {
             return null
         }
@@ -150,15 +170,7 @@ class ReceiptService {
     }
 
     fun getCompleteReceipt(receipt: ReceiptInfo): CompleteReceipt {
-        var card = Card(0, 0, "")
-        var payment = Payment(0, 0, "")
 
-        if (receipt.paymentOrCard == "Card") {
-            card = paymentCardService.getCardByReceiptId(receipt.receiptId)
-        } else if (receipt.paymentOrCard == "Payment") {
-            payment = paymentCardService.getPaymentByReceiptId(receipt.receiptId)
-        }
-        println(receipt.paymentOrCard)
 
         // Get files
         val attachments = attachmentService.getAttachmentsByReceiptId(receipt.receiptId)
@@ -172,13 +184,13 @@ class ReceiptService {
             receipt.receiptCreatedAt,
             receipt.committeeName,
             receipt.userFullname,
-            receipt.paymentOrCard,
-            receipt.attachmentCount,
-            receipt.latestReviewStatus,
+            receipt.cardNumber?.let { "Card" } ?: "Payment",
+            receipt.attachmentCount.toInt(),
+            receipt.latestReviewStatus.toString(),
             receipt.latestReviewCreatedAt,
             receipt.latestReviewComment,
-            payment.account_number,
-            card.card_number,
+            receipt.accountNumber ?: "",
+            receipt.cardNumber ?: "",
             files
         )
 

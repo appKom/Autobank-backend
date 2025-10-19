@@ -16,7 +16,7 @@ class AttachmentService {
         return attachmentRepository.save(attachment);
     }
 
-    fun getAttachmentsByReceiptId(id: Int): List<Attachment> {
+    fun getAttachmentsByReceiptId(id: String): List<Attachment> {
         return attachmentRepository.findByReceiptId(id);
     }
 

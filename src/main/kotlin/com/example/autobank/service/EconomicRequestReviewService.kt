@@ -1,4 +1,4 @@
-package com.example.autobank.service
+/*package com.example.autobank.service
 
 import com.example.autobank.data.models.EconomicRequestReview
 import com.example.autobank.data.models.Economicrequest
@@ -22,22 +22,22 @@ class EconomicRequestReviewService {
         description: String,
         economicrequest: Economicrequest
     ) {
-        val dato = LocalDateTime.now()
+       /* val dato = LocalDateTime.now()
         val economicRequestReview = EconomicRequestReview(
-            economicRequestReviewId = -1,
-            economicRequestId = economicrequest.id,
-            date = dato,
-            adminID = user.onlineId,
-            description = description,
+            id = -1,
+            economicrequestId = economicrequest.id,
+            createdat = dato,
+            onlineUserId = user.onlineId,
+            comment = description,
             status = status
         )
         economicRequestReviewRepository.save(economicRequestReview)
-
+*/
     }
 
     fun updateStatus(economicRequestReview: EconomicRequestReview, status: Boolean) {
         economicRequestReviewRepository.findEconomicRequestReviewsEconomicRequestIdAndUpdateStatus(
-            economicRequestReview.economicRequestReviewId,
+            economicRequestReview.id,
             status
         )
     }
@@ -46,4 +46,4 @@ class EconomicRequestReviewService {
         return economicRequestReviewRepository.getEconomicRequestReviewByEconomicRequestId(economicrequest.id)
 
     }
-}
+}*/

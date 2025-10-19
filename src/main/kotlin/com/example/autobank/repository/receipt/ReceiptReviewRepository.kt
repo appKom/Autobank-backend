@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-interface ReceiptReviewRepository : JpaRepository<ReceiptReview, Int> {
-    fun findFirstByReceiptId(receiptId: Int): ReceiptReview?
+interface ReceiptReviewRepository : JpaRepository<ReceiptReview, String> {
+    fun findFirstByReceiptId(receiptId: String): ReceiptReview?
 
     @Modifying
     @Transactional
-    fun deleteByReceiptId(receiptId: Int)
+    fun deleteByReceiptId(receiptId: String)
 
 }

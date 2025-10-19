@@ -1,12 +1,13 @@
 package com.example.autobank.service
 
-import org.springframework.stereotype.Service
-import com.example.autobank.repository.receipt.ReceiptRepository
-import org.springframework.beans.factory.annotation.Autowired
-import com.example.autobank.repository.receipt.ReceiptInfoViewRepository
-import com.example.autobank.data.receipt.*
 import com.example.autobank.data.models.ReceiptInfo
-import com.example.autobank.repository.receipt.specification.ReceiptInfoSpecification
+import com.example.autobank.data.models.ReceiptStatus
+import org.springframework.stereotype.Service
+import org.springframework.beans.factory.annotation.Autowired
+
+import com.example.autobank.repository.receipt.ReceiptInfoRepositoryImpl
+import com.example.autobank.data.receipt.*
+import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 
@@ -15,10 +16,11 @@ import org.springframework.data.domain.Sort
 class ReceiptAdminService {
 
     @Autowired
-    lateinit var receiptInfoViewRepository: ReceiptInfoViewRepository
+    lateinit var receiptInfoRepository: ReceiptInfoRepositoryImpl
 
     @Autowired
     lateinit var receiptService: ReceiptService
+
 
     fun getAll(from: Int, count: Int, status: String?, committeeName: String?, search: String?, sortField: String?, sortOrder: String?): ReceiptListResponseBody? {
 
@@ -31,19 +33,40 @@ class ReceiptAdminService {
 
         val pageable = PageRequest.of(from, count, sort)
 
-        val specification = ReceiptInfoSpecification(null, status, committeeName, search)
+        val specification = ReceiptInfoViewSpecification(null, status, committeeName, search)
 
-        val receipts: List<ReceiptInfo> = receiptInfoViewRepository.findAll(specification, pageable).toList()
+        val receipts = receiptInfoRepository.findAll(specification, pageable);
 
-        val total: Long = receiptInfoViewRepository.count(specification)
+        val receiptInfoResponseList = receipts.toList().map { receipt ->
+            ReceiptInfoResponseBody(
+                receiptId = receipt.receiptId,
+                amount = receipt.amount.toString(),
+                receiptName = receipt.receiptName,
+                receiptDescription = receipt.receiptDescription,
+                receiptCreatedAt = receipt.receiptCreatedAt.toString(),
+                committeeName = receipt.committeeName,
+                userFullname = receipt.userFullname,
+                paymentOrCard = if (receipt.accountNumber != null) "Payment" else "Card",
+                attachmentCount = receipt.attachmentCount.toInt(),
+                latestReviewStatus = receipt.latestReviewStatus.toString(),
+                latestReviewCreatedAt = receipt.latestReviewCreatedAt.toString(),
+                latestReviewComment = receipt.latestReviewComment,
+                paymentAccountNumber = receipt.accountNumber,
+                cardCardNumber = receipt.cardNumber,
+                attachments = listOf()
+            )
+        }
 
-        return ReceiptListResponseBody(receipts.toTypedArray(), total)
+        val total: Long = receipts.totalElements // receiptInfoRepository.count(specification)
+
+        return ReceiptListResponseBody(receiptInfoResponseList.toTypedArray(), total)
 
 
     }
 
-    fun getReceipt(id: Int): CompleteReceipt? {
-        val receipt = receiptInfoViewRepository.findByReceiptId(id)
+    fun getReceipt(id: String): CompleteReceipt? {
+        val receipt = receiptInfoRepository.findById(id) ?: return null
+
         return receiptService.getCompleteReceipt(receipt)
 
     }

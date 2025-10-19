@@ -1,4 +1,4 @@
-package com.example.autobank.repository
+/*package com.example.autobank.repository
 
 import com.example.autobank.data.models.EconomicRequestReview
 import org.springframework.data.jpa.repository.JpaRepository
@@ -17,4 +17,4 @@ interface EconomicRequestReviewRepository : JpaRepository<EconomicRequestReview,
     fun findEconomicRequestReviewsEconomicRequestIdAndUpdateStatus(id: Int, status: Boolean)
 
     fun getEconomicRequestReviewByEconomicRequestId(id: Int): EconomicRequestReview
-}
+}*/

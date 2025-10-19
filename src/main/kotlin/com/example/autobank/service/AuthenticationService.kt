@@ -1,6 +1,8 @@
 package com.example.autobank.service
 
 import com.example.autobank.data.authentication.Auth0User
+import com.example.autobank.repository.user.OnlineUserRepository
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
@@ -12,11 +14,17 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
+import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
 
 
 @Service
-class AuthenticationService {
+class AuthenticationService(
+    @Value("\${admincommittee}") private val adminCommittee: String,
+    @Value("\${auth0.domain}") private val domain: String,
+    @Value("\${environment}") private val environment: String,
+) {
 
     private val restTemplate = RestTemplate()
 
@@ -24,17 +32,10 @@ class AuthenticationService {
 
     private val fetchUserCommitteesUrl = "https://old.online.ntnu.no/api/v1/group/online-groups/?members__user="
 
-    private val adminCommitteeNameLong = "Applikasjonskomiteen" // Temporarily appkom
+    private val adminRecheckTime = 24 * 60 * 60 * 1000;
 
-    @Value("\${auth0.domain}")
-    private val domain: String = ""
-
-
-    @Value("\${environment}")
-    private val environment: String = ""
-
-    @Value("\${superadmin.emails}")
-    private val superadminEmails: String = ""
+    @Autowired
+    lateinit var onlineUserRepository: OnlineUserRepository
 
     fun getAuth0User(token: String): Auth0User {
         return Auth0User("sub", "email", "name")
@@ -134,19 +135,38 @@ class AuthenticationService {
         return response.body?.results?.map { it.name_long } ?: listOf()
     }
 
-    fun checkBankomMembership(): Boolean {
+    fun checkAdmin(): Boolean {
+
+        val user = onlineUserRepository.findByOnlineId(getUserSub()) ?: throw Exception("User not found");
+        val currentTime = LocalDateTime.now()
+        if (Duration.between(user.lastUpdated, currentTime).toMillis() > adminRecheckTime) {
+            user.lastUpdated = currentTime
+
+            val isAdmin = checkBankomMembership()
+            user.isAdmin = isAdmin
+            onlineUserRepository.save(user)
+
+            return isAdmin;
+        } else {
+            return user.isAdmin;
+        }
+    }
+
+    private fun checkBankomMembership(): Boolean {
         if (environment == "dev") {
             return true
         }
 
-        val userId = fetchOnlineuserId()
         val userCommittees = fetchUserCommittees()
-        return userCommittees.contains(adminCommitteeNameLong)
+        return userCommittees.contains(adminCommittee)
     }
 
+    /*
     fun checkSuperAdmin(): Boolean {
         return superadminEmails.split(",").contains(getUserDetails().email)
     }
+    */
+
 
     fun getExpiresAt(): Instant? {
             val authentication = SecurityContextHolder.getContext().authentication

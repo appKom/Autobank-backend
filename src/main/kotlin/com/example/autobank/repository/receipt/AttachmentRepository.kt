@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AttachmentRepository : JpaRepository<Attachment, Int> {
-    fun findByReceiptId(receiptId: Int): List<Attachment>
+    fun findByReceiptId(receiptId: String): List<Attachment>
 }

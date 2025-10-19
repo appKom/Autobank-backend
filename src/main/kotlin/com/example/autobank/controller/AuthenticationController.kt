@@ -10,14 +10,18 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.*
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication Controller", description = "Endpoints for user authentication")
 class AuthenticationController {
     @Autowired
     lateinit var onlineUserService: OnlineUserService;
 
+    @Operation(summary = "Check authenticated user", description = "Returns information about the currently authenticated user")
     @GetMapping("/getuser")
     fun checkUser(): ResponseEntity<AuthenticatedUserResponse> {
             return try {

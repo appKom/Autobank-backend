@@ -6,6 +6,7 @@ import com.example.autobank.data.user.OnlineUser
 import com.example.autobank.repository.user.OnlineUserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 
 @Service
@@ -36,16 +37,18 @@ class OnlineUserService(
             }
         }
 
-        return AuthenticatedUserResponse(success = true, authenticationService.checkBankomMembership(), authenticationService.checkSuperAdmin(), expiresat = authenticationService.getExpiresAt(), fullname = authenticationService.getFullName())
+        return AuthenticatedUserResponse(success = true, authenticationService.checkAdmin(), false, expiresat = authenticationService.getExpiresAt(), fullname = authenticationService.getFullName())
     }
 
     fun createOnlineUser(): OnlineUser {
             val userinfo: Auth0User = authenticationService.getUserDetails()
             val onlineUser = OnlineUser(
-                id = 0,
+                id = "",
                 onlineId = userinfo.sub,
                 email = userinfo.email,
                 fullname = userinfo.name,
+                isAdmin = false,
+                lastUpdated = LocalDateTime.of(2000, 1, 1, 0, 0)
             )
 
             return onlineUserRepository.save(onlineUser)

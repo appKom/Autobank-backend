@@ -1,73 +1,97 @@
-# autobank
+# Autobank - Receipt Management System
 
+Autobank is a Kotlin Spring Boot application designed for managing financial receipts and economic requests for committees at NTNU Online. The system provides a comprehensive solution for receipt submission, review processes, and administrative functions with secure OAuth2/JWT authentication.
 
+## 🚀 Quick Start
 
-### application.properties values
-- spring.datasource.url
-- spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
-- spring.jpa.hibernate.naming.implicit-strategy=org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
-- spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-- auth0.audience=
-- spring.security.oauth2.resourceserver.jwt.issuer-uri=
-- auth0.domain=
-- azure.storage.container-name=
-- azure.storage.connection-string=
-- environment = dev | prod
-- superadmin.emails =
+### Running the Application
 
-## Current endpoints
-**Header required for all requests**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/appKom/gnocchitony.git
+   cd gnocchitony
+   ```
 
-```"Authorization" "Bearer <access token>"```
+2. **Configure environment variables**
 
-### /api/auth/check
-```GET```
-```
-{
-    "success": Boolean,
-    "isadmin": Boolean,
-    "issuperadmin": Boolean,
-}
-```
+3. **Run the application**
+   ```bash
+   ./gradlew bootRun
+   ```
 
-### /api/receipt/create
-```POST```
-```
- {
-    "receipt": {
-        "amount": Double,
-        "description": String,
-        "name": String,
-        "committee_id": Integer
-    }, 
-    "attachments": [
-        base64 string, base64 string, ...
-    ], 
-    "receiptPaymentInformation": {
-        cardnumber: String?,
-        accountnumber: String?,
-        usedOnlineCard: Boolean,
-    }
-}
-```
+The application will start on `http://localhost:8080`
 
-### /api/economicrequest/create
-```POST```
-```
-{
-  "subject": String,
-  "purpose": String,
-  "date": "YYYY-MM-DD",
-  "duration": String,
-  "description": String,
-  "amount": Double,
-  "personCount": Integer,
-  "names": String,
-  "paymentDescription": String,
-  "otherInformation": String,
-}
+## 📋 Features
+
+- **Receipt Management**: Create, view, and manage financial receipts
+- **Admin Review System**: Approve or deny receipts with comments
+- **Committee Integration**: Associate receipts with specific committees
+- **File Attachments**: Upload and manage receipt attachments via Azure Blob Storage
+- **Economic Requests**: Submit and manage economic requests (partial implementation)
+- **Role-based Access Control**: Admin and regular user permissions
+- **OAuth2 Authentication**: Secure authentication via Auth0
+
+## 🏗️ Architecture
+
+- **Backend**: Kotlin + Spring Boot
+- **Database**: Microsoft SQL Server (Azure)
+- **Authentication**: OAuth2/JWT via Auth0
+- **File Storage**: Azure Blob Storage
+- **Build Tool**: Gradle
+
+## 📚 Documentation
+
+Detailed documentation is available in the `/docs` folder:
+
+- [API Routes](docs/api-routes.md) - Complete API endpoint documentation
+- [Database Schema](docs/database-schema.md) - Database structure and relationships
+- [Architecture](docs/architecture.md) - System architecture and design patterns
+- [Setup & Deployment](docs/setup-deployment.md) - Detailed setup and deployment guide
+
+## 🔧 Configuration
+
+## 🔐 Authentication
+
+All API endpoints require authentication via Bearer token:
 
 ```
+Authorization: Bearer <access_token>
+```
 
+**Note**: In development mode (`environment=dev`), security is disabled for easier testing.
 
+## 🛠️ Development
+
+### Project Structure
+```
+src/main/kotlin/com/example/autobank/
+├── controller/          # REST controllers
+├── service/            # Business logic
+├── repository/         # Data access layer
+├── data/              # DTOs and data models
+├── security/          # Security configuration
+└── AutobankApplication.kt
+```
+
+### Key Endpoints
+
+- `GET /api/auth/getuser` - Get current user info
+- `POST /api/receipt/create` - Create new receipt
+- `GET /api/receipt/getall` - List user receipts
+- `GET /api/admin/receipt/all` - Admin: List all receipts
+- `POST /api/admin/receipt/review` - Admin: Review receipt
+
+For complete API documentation, see [docs/api-routes.md](docs/api-routes.md).
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is part of NTNU Online's application suite.
 

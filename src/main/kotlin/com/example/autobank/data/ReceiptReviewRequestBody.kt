@@ -4,7 +4,7 @@ import jakarta.persistence.Entity
 
 
 data class ReceiptReviewRequestBody (
-    val receiptId: Int,
+    val receiptId: String,
     val status: String,
     val comment: String,
 )

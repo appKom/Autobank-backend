@@ -1,30 +1,46 @@
 package com.example.autobank.data.models
 
+
+
+import com.example.autobank.data.user.OnlineUser
 import jakarta.persistence.*
+import org.hibernate.annotations.CreationTimestamp
+import org.jetbrains.annotations.NotNull
 import java.time.LocalDateTime
 
+enum class EconomicRequestStatus {
+    APPROVED, DENIED
+}
+
 @Entity
-@Table(name = "economicRequestReview")
-class EconomicRequestReview(
-
+@Table(name = "economicrequestreview")
+class EconomicRequestReview (
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "economicRequestReviewId", nullable = false)
-    val economicRequestReviewId: Int,
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id")
+    @NotNull
+    val id: String,
 
-    @Column(name = "economicRequestId", nullable = false)
-    val economicRequestId: Int,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "economicrequest_id", nullable = false)
+    val economicrequest: Economicrequest,
 
-    @Column(name = "date", nullable = false)
-    val date: LocalDateTime,
 
-    @Column(name = "adminId", nullable = false)
-    val adminID: String,
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    val status: EconomicRequestStatus,
 
-    @Column(name = "description", nullable = true)
-    val description: String?,
+    @Column(name = "comment")
+    val comment: String,
 
-    @Column(name = "status", nullable = true)
-    var status: Boolean?
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "onlineuser_id")
+    @NotNull
+    val user: OnlineUser,
 
+    @CreationTimestamp
+    @Column(name = "createdat")
+    @NotNull
+    val createdat: LocalDateTime?,
 )

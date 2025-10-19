@@ -15,11 +15,6 @@ class EconomicrequestService {
     @Autowired
     lateinit var onlineUserService: OnlineUserService
 
-    fun createEconomicrequest(economicrequest: Economicrequest): Economicrequest {
-        val user = onlineUserService.getOnlineUser() ?: throw Exception("User not found")
-        economicrequest.onlineUserId = user.id;
-        return economicrequestRepository.save(economicrequest);
-    }
 
     fun deleteEconomicrequest(id: Int) {
         economicrequestRepository.deleteById(id);

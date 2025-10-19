@@ -1,46 +1,54 @@
 package com.example.autobank.repository.receipt.specification
 
-import com.example.autobank.data.models.ReceiptInfo
+import com.example.autobank.data.models.Receipt
+import jakarta.persistence.criteria.*
 import org.springframework.data.jpa.domain.Specification
-import jakarta.persistence.criteria.Predicate
+import com.example.autobank.data.models.Committee
+import com.example.autobank.data.user.OnlineUser
+import com.example.autobank.data.models.ReceiptReview
 
-class ReceiptInfoSpecification(
-    private val userId: Int?,
+class ReceiptInfoViewSpecification(
+    private val userId: String?,
     private val status: String?,
     private val committeeName: String?,
     private val search: String?
-) : Specification<ReceiptInfo> {
+) : Specification<Receipt> {
+
     override fun toPredicate(
-        root: jakarta.persistence.criteria.Root<ReceiptInfo>,
-        query: jakarta.persistence.criteria.CriteriaQuery<*>,
-        criteriaBuilder: jakarta.persistence.criteria.CriteriaBuilder
+        root: Root<Receipt>,
+        query: CriteriaQuery<*>,
+        cb: CriteriaBuilder
     ): Predicate? {
         val predicates = mutableListOf<Predicate>()
 
+        // Join to related entities needed for filtering
+        val userJoin: Join<Receipt, OnlineUser> = root.join("user")
+        val committeeJoin: Join<Receipt, Committee> = root.join("committee", JoinType.LEFT)
+        val reviewsJoin: SetJoin<Receipt, ReceiptReview> = root.joinSet("reviews", JoinType.LEFT)
+
         if (userId != null) {
-            predicates.add(criteriaBuilder.equal(root.get<Int>("userId"), userId))
+            predicates.add(cb.equal(userJoin.get<Int>("id"), userId))
         }
 
-
-
-        if (status == "NONE") {
-            predicates.add(criteriaBuilder.isNull(root.get<String>("latestReviewStatus")))
-        } else if (status == "DONE") {
-            predicates.add(criteriaBuilder.isNotNull(root.get<String>("latestReviewStatus")))
-        }else if (status != null) {
-            predicates.add(criteriaBuilder.equal(root.get<String>("latestReviewStatus"), status))
+        if (status != null) {
+            when (status) {
+                "NONE" -> predicates.add(cb.isNull(reviewsJoin.get<String>("status")))
+                "DONE" -> predicates.add(cb.isNotNull(reviewsJoin.get<String>("status")))
+                else -> predicates.add(cb.equal(reviewsJoin.get<String>("status"), status))
+            }
         }
 
-        if (committeeName != null) {
+        if (!committeeName.isNullOrEmpty()) {
             val committeeNames = committeeName.split(",").map { it.trim() }
-            predicates.add(root.get<String>("committeeName").`in`(committeeNames))
+            predicates.add(committeeJoin.get<String>("name").`in`(committeeNames))
         }
 
-        if (search != null) {
-            predicates.add(criteriaBuilder.like(root.get<String>("receiptName"), "%$search%"))
+        if (!search.isNullOrEmpty()) {
+            predicates.add(cb.like(root.get<String>("name"), "%$search%"))
         }
 
+        query.distinct(true) // To avoid duplicates due to joins
 
-        return criteriaBuilder.and(*predicates.toTypedArray())
+        return cb.and(*predicates.toTypedArray())
     }
 }
