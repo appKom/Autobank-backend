@@ -7,7 +7,7 @@ import com.example.autobank.repository.receipt.*
 import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import com.example.autobank.service.MailService
 
@@ -102,11 +102,11 @@ class ReceiptService {
             <p><strong>Brukerens e-post:</strong> ${user.email}</p>
             <p><strong>Kvitterings-ID:</strong> ${storedReceipt.id}</p>
             <p><strong>Beløp:</strong> ${storedReceipt.amount}</p>
-            <p><strong>Komité-ID:</strong> ${storedReceipt.committee_id}</p>
+            <p><strong>Komité-ID:</strong> ${storedReceipt.committee}</p>
             <p><strong>Anledning:</strong> ${storedReceipt.name}</p>
             <p><strong>Beskrivelse:</strong> ${storedReceipt.description}</p>
-            <p><strong>Betalingsmetode:</strong> ${if (receiptRequestBody.receiptPaymentInformation.usedOnlineCard) "Online-kort" else "Bankoverføring"}</p>
-            <p><strong>Kontonummer:</strong> ${receiptRequestBody.receiptPaymentInformation.accountnumber ?: "Ikke oppgitt"}</p>
+            <p><strong>Betalingsmetode:</strong> ${if (receiptRequestBody.receiptPaymentInformation?.usedOnlineCard == true) "Online-kort" else "Bankoverføring"}</p>
+            <p><strong>Kontonummer:</strong> ${receiptRequestBody.receiptPaymentInformation?.accountnumber ?: "Ikke oppgitt"}</p>
         """.trimIndent()
 
         mailService.sendEmail(user.email, "Receipt Submission Details", emailContent)
