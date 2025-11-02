@@ -10,16 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ReceiptReviewService {
-
-    @Autowired
-    lateinit var receiptReviewRepository: ReceiptReviewRepository
-
-    @Autowired
-    lateinit var onlineUserService: OnlineUserService
-
-    @Autowired
-    lateinit var receiptRepository: ReceiptRepository
+class ReceiptReviewService(
+    private val receiptReviewRepository: ReceiptReviewRepository,
+    private val onlineUserService: OnlineUserService,
+    private val receiptRepository: ReceiptRepository
+) {
 
     fun createReceiptReview(receiptReview: ReceiptReviewRequestBody): ReceiptReviewResponseBody {
         val onlineuser = onlineUserService.getOnlineUser() ?: throw Exception("User not found")

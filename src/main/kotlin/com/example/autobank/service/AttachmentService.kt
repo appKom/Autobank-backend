@@ -7,10 +7,9 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class AttachmentService {
-
-    @Autowired
-    lateinit var attachmentRepository: AttachmentRepository;
+class AttachmentService(
+    private val attachmentRepository: AttachmentRepository
+) {
 
     fun createAttachment(attachment: Attachment): Attachment {
         return attachmentRepository.save(attachment);

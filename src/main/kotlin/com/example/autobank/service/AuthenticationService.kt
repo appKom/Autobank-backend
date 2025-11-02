@@ -104,7 +104,6 @@ class AuthenticationService(
         )
 
         if (response.statusCode.isError || response.body == null) {
-
             throw Exception("Error fetching user id")
         }
 
@@ -176,7 +175,7 @@ class AuthenticationService(
             } else {
                 null
             }
-    }
+        }
 
     data class Result(
         val name_long: String = ""
