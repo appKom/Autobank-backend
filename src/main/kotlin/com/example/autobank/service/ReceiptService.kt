@@ -7,7 +7,7 @@ import com.example.autobank.repository.receipt.*
 import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import com.example.autobank.service.MailService
 
