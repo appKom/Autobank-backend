@@ -89,7 +89,7 @@ class ReceiptService(
             <p><strong>Brukerens e-post:</strong> ${user.email}</p>
             <p><strong>Kvitterings-ID:</strong> ${storedReceipt.id}</p>
             <p><strong>Beløp:</strong> ${storedReceipt.amount}</p>
-            <p><strong>Komité-ID:</strong> ${storedReceipt.committee}</p>
+            <p><strong>Komité-ID:</strong> ${storedReceipt.committee.name}</p>
             <p><strong>Anledning:</strong> ${storedReceipt.name}</p>
             <p><strong>Beskrivelse:</strong> ${storedReceipt.description}</p>
             <p><strong>Betalingsmetode:</strong> ${
