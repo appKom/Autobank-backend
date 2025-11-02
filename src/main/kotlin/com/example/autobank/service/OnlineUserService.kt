@@ -11,16 +11,9 @@ import java.time.LocalDateTime
 
 @Service
 class OnlineUserService(
+    private val authenticationService: AuthenticationService,
+    private val onlineUserRepository: OnlineUserRepository
 ) {
-
-    @Autowired
-    lateinit var authenticationService: AuthenticationService
-
-    @Autowired
-    lateinit var onlineUserRepository: OnlineUserRepository
-
-
-
 
     fun getOnlineUser(): OnlineUser? {
         val sub: String = authenticationService.getUserSub()

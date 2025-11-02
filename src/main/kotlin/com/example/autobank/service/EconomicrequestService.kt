@@ -7,13 +7,10 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class EconomicrequestService {
-
-    @Autowired
-    lateinit var economicrequestRepository: EconomicrequestRepository
-
-    @Autowired
-    lateinit var onlineUserService: OnlineUserService
+class EconomicrequestService(
+    private val economicrequestRepository: EconomicrequestRepository,
+    private val onlineUserService: OnlineUserService
+) {
 
 
     fun deleteEconomicrequest(id: Int) {

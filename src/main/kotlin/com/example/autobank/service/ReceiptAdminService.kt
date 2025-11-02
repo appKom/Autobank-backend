@@ -13,14 +13,10 @@ import org.springframework.data.domain.Sort
 
 
 @Service
-class ReceiptAdminService {
-
-    @Autowired
-    lateinit var receiptInfoRepository: ReceiptInfoRepositoryImpl
-
-    @Autowired
-    lateinit var receiptService: ReceiptService
-
+class ReceiptAdminService(
+    private val receiptInfoRepository: ReceiptInfoRepositoryImpl,
+    private val receiptService: ReceiptService
+) {
 
     fun getAll(from: Int, count: Int, status: String?, committeeName: String?, search: String?, sortField: String?, sortOrder: String?): ReceiptListResponseBody? {
 

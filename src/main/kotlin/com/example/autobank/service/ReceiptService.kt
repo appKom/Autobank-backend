@@ -5,32 +5,19 @@ import com.example.autobank.data.receipt.*
 import com.example.autobank.data.receipt.ReceiptInfoResponseBody
 import com.example.autobank.repository.receipt.*
 import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort
 
 @Service
-
-class ReceiptService {
-
-    @Autowired
-    lateinit var onlineUserService: OnlineUserService
-
-    @Autowired
-    lateinit var receiptRepository: ReceiptRepository
-
-    @Autowired
-    lateinit var blobService: BlobService
-
-    @Autowired
-    lateinit var attachmentService: AttachmentService
-
-    @Autowired
-    lateinit var committeeService: CommitteeService
-
-    @Autowired
-    lateinit var receiptInfoRepository: ReceiptInfoRepositoryImpl
+class ReceiptService(
+    private val onlineUserService: OnlineUserService,
+    private val receiptRepository: ReceiptRepository,
+    private val blobService: BlobService,
+    private val attachmentService: AttachmentService,
+    private val committeeService: CommitteeService,
+    private val receiptInfoRepository: ReceiptInfoRepositoryImpl
+) {
 
 
     fun createReceipt(receiptRequestBody: ReceiptRequestBody): ReceiptResponseBody {
@@ -147,11 +134,6 @@ class ReceiptService {
         }
 
         return getCompleteReceipt(receipt)
-
-
-
-
-
     }
 
     fun getCompleteReceipt(receipt: ReceiptInfo): CompleteReceipt {
