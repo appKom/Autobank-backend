@@ -37,10 +37,6 @@ class AuthenticationService(
     @Autowired
     lateinit var onlineUserRepository: OnlineUserRepository
 
-    fun getAuth0User(token: String): Auth0User {
-        return Auth0User("sub", "email", "name")
-    }
-
     fun getSecondsUntilExpiration(): Long {
         val expiresAt = getExpiresAt()
         return if (expiresAt != null) {
