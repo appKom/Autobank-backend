@@ -1,5 +1,6 @@
 package com.example.autobank.data.authentication
 
+import com.nimbusds.openid.connect.sdk.claims.Gender
 import org.jetbrains.annotations.NotNull
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -12,4 +13,16 @@ class Auth0User(
     val email: String,
     @NotNull
     val name: String,
+    @NotNull
+    val given_name: String,
+    @NotNull
+    val family_name: String,
+    @NotNull
+    val nickname: String,
+    @NotNull
+    val picture: String,
+    @NotNull
+    val gender: String,
+    @NotNull
+    val email_verified: String,
 )

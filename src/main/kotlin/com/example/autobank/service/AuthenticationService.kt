@@ -76,7 +76,7 @@ class AuthenticationService(
         }
         val entity = HttpEntity<Void>(headers)
         val response: ResponseEntity<Map<String, Any>> = restTemplate.exchange(
-            "${domain}/userinfo",
+            "https://${domain}/userinfo",
             HttpMethod.GET,
             entity,
         )
@@ -84,7 +84,13 @@ class AuthenticationService(
         return Auth0User(
             sub = response.body?.get("sub").toString(),
             email = response.body?.get("email").toString(),
-            name = response.body?.get("name").toString(),
+            given_name = response.body?.get("given_name").toString(),
+            family_name = response.body?.get("family_name").toString(),
+            nickname = response.body?.get("nickname").toString(),
+            picture = response.body?.get("picture").toString(),
+            gender = response.body?.get("gender").toString(),
+            email_verified = response.body?.get("email_verified").toString(),
+            name = response.body?.get("given_name").toString() + " " + response.body?.get("family_name").toString()
         )
     }
 
@@ -182,5 +188,3 @@ class AuthenticationService(
     )
 
 }
-
-
