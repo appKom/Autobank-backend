@@ -104,11 +104,12 @@ class AuthenticationService(
         }
 
         val userId = getUserDetails().sub
-        val input = mapOf("id" to userId)
+
+        // Wrap with "json" key, and the value is just the string ID (not an object)
+        val input = mapOf("json" to userId)
         val inputJson = ObjectMapper().writeValueAsString(input)
         val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
 
-        // Build URL as a plain string to avoid template variable interpretation
         val endpoint = "${apiBaseDomain}group.allByMember?input=$encodedInput"
 
         val headers = HttpHeaders().apply {
