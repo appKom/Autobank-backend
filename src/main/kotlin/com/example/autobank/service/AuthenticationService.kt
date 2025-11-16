@@ -94,12 +94,21 @@ class AuthenticationService(
     }
 
     private fun fetchOnlineuserId(): Int {
+
+        val input = mapOf("accessToken" to getAccessToken())
+        val inputJson = ObjectMapper().writeValueAsString(input)
+        val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
+
+        // Include the procedure name in the URL
+        val endpoint = "${apiBaseDomain}user.getByAccessToken?input=$encodedInput"
+
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
         }
         val entity = HttpEntity<Void>(headers)
+
         val response: ResponseEntity<Map<String, Any>> = restTemplate.exchange(
-            apiBaseDomain,
+            endpoint,
             HttpMethod.GET,
             entity,
         )
