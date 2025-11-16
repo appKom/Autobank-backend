@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -97,23 +98,19 @@ class AuthenticationService(
             ?: throw Exception("User not found")
 
         return Auth0User(user.id, user.email, user.name)
-    }
-    fun fetchUserCommittees(): List<String> {
+    }fun fetchUserCommittees(): List<String> {
         if (environment != "prod") {
             return listOf("Applikasjonskomiteen")
         }
 
         val userId = getUserDetails().sub
 
-        // Don't encode - pass as plain JSON string
-        val input = """{"json":"$userId"}"""
+        // Just stringify the ID directly, like SuperJSON.stringify(userInfo.id)
+        val input = """"$userId""""  // This creates: "auth0|..."
+        val encodedInput = URLEncoder.encode(input, StandardCharsets.UTF_8.toString())
+        val urlString = "${apiBaseDomain}group.allByMember?input=$encodedInput"
 
-        // Build URL using UriComponentsBuilder which will handle encoding properly
-        val uri = UriComponentsBuilder
-            .fromHttpUrl("${apiBaseDomain}group.allByMember")
-            .queryParam("input", input)
-            .build(false)  // Important: false = don't encode yet
-            .toUri()
+        val uri = URI(urlString)
 
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
@@ -121,7 +118,7 @@ class AuthenticationService(
         val entity = HttpEntity<Void>(headers)
 
         val response: ResponseEntity<UserCommitteeResponse> = restTemplate.exchange(
-            uri,  // Pass URI object, not string
+            uri,
             HttpMethod.GET,
             entity,
             object : ParameterizedTypeReference<UserCommitteeResponse>() {}
