@@ -98,7 +98,6 @@ class AuthenticationService(
 
         return Auth0User(user.id, user.email, user.name)
     }
-
     fun fetchUserCommittees(): List<String> {
         if (environment != "prod") {
             return listOf("Applikasjonskomiteen")
@@ -107,12 +106,10 @@ class AuthenticationService(
         val userId = getUserDetails().sub
         val input = mapOf("id" to userId)
         val inputJson = ObjectMapper().writeValueAsString(input)
+        val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
 
-        val endpoint = UriComponentsBuilder
-            .fromHttpUrl("${apiBaseDomain}group.allByMember")
-            .queryParam("input", inputJson)
-            .encode()
-            .toUriString()
+        // Build URL as a plain string to avoid template variable interpretation
+        val endpoint = "${apiBaseDomain}group.allByMember?input=$encodedInput"
 
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
