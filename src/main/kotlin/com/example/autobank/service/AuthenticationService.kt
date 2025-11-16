@@ -72,23 +72,31 @@ class AuthenticationService(
     }
 
     fun getUserDetails(): Auth0User {
+        val endpoint = UriComponentsBuilder
+            .fromHttpUrl("${apiBaseDomain}user.getMe")
+            .encode()
+            .toUriString()
+
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
         }
         val entity = HttpEntity<Void>(headers)
+
         val response: ResponseEntity<UserResponse> = restTemplate.exchange(
-            "${domain}/user.getMe",
+            endpoint,
             HttpMethod.GET,
             entity,
-
+            object : ParameterizedTypeReference<UserResponse>() {}
         )
 
         if (response.statusCode.isError || response.body == null) {
-            throw Exception("Error fetching user committees")
+            throw Exception("Error fetching user details")
         }
 
-        val results = response.body?.result?.data?.json?.first() ?: throw Exception("User not found")
-        return Auth0User(results.id, results.email, results.name)
+        val user = response.body?.result?.data?.json?.firstOrNull()
+            ?: throw Exception("User not found")
+
+        return Auth0User(user.id, user.email, user.name)
     }
 
     fun fetchUserCommittees(): List<String> {
@@ -96,7 +104,6 @@ class AuthenticationService(
             return listOf("Applikasjonskomiteen")
         }
 
-        // fetch users id, should probably be stored in user object
         val userId = getUserDetails().sub
         val input = mapOf("id" to userId)
         val inputJson = ObjectMapper().writeValueAsString(input)
@@ -104,24 +111,26 @@ class AuthenticationService(
         val endpoint = UriComponentsBuilder
             .fromHttpUrl("${apiBaseDomain}group.allByMember")
             .queryParam("input", inputJson)
-            .encode()  // This handles proper encoding
+            .encode()
             .toUriString()
 
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
         }
         val entity = HttpEntity<Void>(headers)
+
         val response: ResponseEntity<UserCommitteeResponse> = restTemplate.exchange(
             endpoint,
             HttpMethod.GET,
             entity,
-            object : ParameterizedTypeReference<UserCommitteeResponse>() {})
+            object : ParameterizedTypeReference<UserCommitteeResponse>() {}
+        )
 
         if (response.statusCode.isError || response.body == null) {
             throw Exception("Error fetching user committees")
         }
 
-        return response.body?.result?.data?.json?.map { it.slug } ?: listOf()
+        return response.body?.result?.data?.json?.map { it.slug } ?: emptyList()
     }
 
     fun checkAdmin(): Boolean {
