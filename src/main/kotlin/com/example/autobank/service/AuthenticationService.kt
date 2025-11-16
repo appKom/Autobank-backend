@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
+import org.springframework.web.util.UriComponentsBuilder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -103,8 +104,12 @@ class AuthenticationService(
         val userId = getUserDetails().sub
         val input = mapOf("id" to userId)
         val inputJson = ObjectMapper().writeValueAsString(input)
-        val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
-        val endpoint = "${apiBaseDomain}group.allByMember?input=$encodedInput"
+
+        val endpoint = UriComponentsBuilder
+            .fromHttpUrl("${apiBaseDomain}group.allByMember")
+            .queryParam("input", inputJson)
+            .encode()  // This handles proper encoding
+            .toUriString()
 
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
