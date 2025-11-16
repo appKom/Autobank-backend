@@ -13,16 +13,4 @@ class Auth0User(
     val email: String,
     @NotNull
     val name: String,
-    @NotNull
-    val given_name: String,
-    @NotNull
-    val family_name: String,
-    @NotNull
-    val nickname: String,
-    @NotNull
-    val picture: String,
-    @NotNull
-    val gender: String,
-    @NotNull
-    val email_verified: String,
 )
