@@ -79,6 +79,7 @@ class AuthenticationService(
             "$apiBaseDomain/user.getMe",
             HttpMethod.GET,
             entity,
+
         )
 
         // Navigate to the nested json object
@@ -93,39 +94,13 @@ class AuthenticationService(
         )
     }
 
-    private fun fetchOnlineuserId(): Int {
-
-        val input = mapOf("accessToken" to getAccessToken())
-        val inputJson = ObjectMapper().writeValueAsString(input)
-        val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
-
-        // Include the procedure name in the URL
-        val endpoint = "${domain}/userinfo"
-
-        val headers = HttpHeaders().apply {
-            set("Authorization", "Bearer ${getAccessToken()}")
-        }
-        val entity = HttpEntity<Void>(headers)
-
-        val response: ResponseEntity<Map<String, Any>> = restTemplate.exchange(
-            endpoint,
-            HttpMethod.GET,
-            entity,
-        )
-
-        if (response.statusCode.isError || response.body == null) {
-            throw Exception("Error fetching user id")
-        }
-
-        return response.body?.get("id").toString().toInt()
-    }
     fun fetchUserCommittees(): List<String> {
         if (environment != "prod") {
             return listOf("Applikasjonskomiteen")
         }
 
         // fetch users id, should probably be stored in user object
-        val userId = fetchOnlineuserId()
+        val userId = getUserDetails().sub
         val input = mapOf("id" to userId)
         val inputJson = ObjectMapper().writeValueAsString(input)
         val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
