@@ -77,7 +77,7 @@ class AuthenticationService(
         }
         val entity = HttpEntity<Void>(headers)
         val response: ResponseEntity<Map<String, Any>> = restTemplate.exchange(
-            "$apiBaseDomain/user.getMe",
+            "https://onlineweb-prod.eu.auth0.com/user.getMe",
             HttpMethod.GET,
             entity,
 
