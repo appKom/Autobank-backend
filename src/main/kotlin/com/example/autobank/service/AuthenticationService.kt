@@ -105,12 +105,15 @@ class AuthenticationService(
 
         val userId = getUserDetails().sub
 
-        // Wrap with "json" key, and the value is just the string ID (not an object)
-        val input = mapOf("json" to userId)
-        val inputJson = ObjectMapper().writeValueAsString(input)
-        val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
+        // Don't encode - pass as plain JSON string
+        val input = """{"json":"$userId"}"""
 
-        val endpoint = "${apiBaseDomain}group.allByMember?input=$encodedInput"
+        // Build URL using UriComponentsBuilder which will handle encoding properly
+        val uri = UriComponentsBuilder
+            .fromHttpUrl("${apiBaseDomain}group.allByMember")
+            .queryParam("input", input)
+            .build(false)  // Important: false = don't encode yet
+            .toUri()
 
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
@@ -118,7 +121,7 @@ class AuthenticationService(
         val entity = HttpEntity<Void>(headers)
 
         val response: ResponseEntity<UserCommitteeResponse> = restTemplate.exchange(
-            endpoint,
+            uri,  // Pass URI object, not string
             HttpMethod.GET,
             entity,
             object : ParameterizedTypeReference<UserCommitteeResponse>() {}
