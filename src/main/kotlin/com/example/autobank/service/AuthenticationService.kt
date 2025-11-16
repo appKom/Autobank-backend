@@ -93,7 +93,7 @@ class AuthenticationService(
             throw Exception("Error fetching user details")
         }
 
-        val user = response.body?.result?.data?.json?.firstOrNull()
+        val user = response.body?.result?.data?.json
             ?: throw Exception("User not found")
 
         return Auth0User(user.id, user.email, user.name)
@@ -185,22 +185,21 @@ class AuthenticationService(
             val memberVisibility: String,
             // Add other fields if needed
         )
-
         data class UserResponse(
-            val result: userResult
+            val result: UserResult
         )
 
-        data class userResult(
-            val data: userData
+        data class UserResult(
+            val data: UserData
         )
 
-        data class userData(
-            val json: List<User>
+        data class UserData(
+            val json: User  // Single User object, not List<User>
         )
 
-        data class User (
+        data class User(
             val id: String,
             val email: String,
-            val name: String,
+            val name: String
         )
 }
