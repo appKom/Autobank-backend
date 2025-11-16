@@ -98,17 +98,22 @@ class AuthenticationService(
             ?: throw Exception("User not found")
 
         return Auth0User(user.id, user.email, user.name)
-    }fun fetchUserCommittees(): List<String> {
+    }
+
+    fun fetchUserCommittees(): List<String> {
         if (environment != "prod") {
             return listOf("Applikasjonskomiteen")
         }
 
         val userId = getUserDetails().sub
 
-        // Just stringify the ID directly, like SuperJSON.stringify(userInfo.id)
-        val input = """"$userId""""  // This creates: "auth0|..."
+        // tRPC format: {"json":"<value>"}
+        // The value itself is the user ID string
+        val input = """{"json":"$userId"}"""
         val encodedInput = URLEncoder.encode(input, StandardCharsets.UTF_8.toString())
         val urlString = "${apiBaseDomain}group.allByMember?input=$encodedInput"
+
+        println("Final URL: $urlString")  // Debug log
 
         val uri = URI(urlString)
 
