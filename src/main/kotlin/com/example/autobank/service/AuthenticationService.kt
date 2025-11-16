@@ -76,23 +76,19 @@ class AuthenticationService(
             set("Authorization", "Bearer ${getAccessToken()}")
         }
         val entity = HttpEntity<Void>(headers)
-        val response: ResponseEntity<Map<String, Any>> = restTemplate.exchange(
-            "https://onlineweb-prod.eu.auth0.com/user.getMe",
+        val response: ResponseEntity<UserResponse> = restTemplate.exchange(
+            "${domain}/user.getMe",
             HttpMethod.GET,
             entity,
 
         )
 
-        // Navigate to the nested json object
-        val result = response.body?.get("result") as? Map<*, *>
-        val data = result?.get("data") as? Map<*, *>
-        val json = data?.get("json") as? Map<*, *>
+        if (response.statusCode.isError || response.body == null) {
+            throw Exception("Error fetching user committees")
+        }
 
-        return Auth0User(
-            sub = json?.get("id")?.toString() ?: "",
-            email = json?.get("email")?.toString() ?: "",
-            name = json?.get("name")?.toString() ?: ""
-        )
+        val results = response.body?.result?.data?.json?.first() ?: throw Exception("User not found")
+        return Auth0User(results.id, results.email, results.name)
     }
 
     fun fetchUserCommittees(): List<String> {
@@ -181,4 +177,21 @@ class AuthenticationService(
             // Add other fields if needed
         )
 
+        data class UserResponse(
+            val result: userResult
+        )
+
+        data class userResult(
+            val data: userData
+        )
+
+        data class userData(
+            val json: List<User>
+        )
+
+        data class User (
+            val id: String,
+            val email: String,
+            val name: String,
+        )
 }
