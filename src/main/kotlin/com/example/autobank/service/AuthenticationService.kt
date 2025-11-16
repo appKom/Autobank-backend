@@ -100,7 +100,7 @@ class AuthenticationService(
         val encodedInput = URLEncoder.encode(inputJson, StandardCharsets.UTF_8.toString())
 
         // Include the procedure name in the URL
-        val endpoint = "${apiBaseDomain}user.getByAccessToken?input=$encodedInput"
+        val endpoint = "${domain}/userinfo"
 
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer ${getAccessToken()}")
