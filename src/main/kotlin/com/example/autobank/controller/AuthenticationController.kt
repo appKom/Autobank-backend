@@ -34,7 +34,7 @@ class AuthenticationController {
             logger.error("Exception type: ${e.javaClass.name}")
             logger.error("Exception message: ${e.message}")
             logger.error("Stack trace:", e)
-            ResponseEntity.badRequest().build()
+            ResponseEntity.internalServerError().build()
         }
     }
 }

@@ -32,7 +32,7 @@ class CommitteeController(
             val committees = committeeService.getAllCommittees()
             ResponseEntity.ok(committees)
         } catch (e: Exception) {
-            ResponseEntity.badRequest().build()
+            ResponseEntity.internalServerError().build()
         }
     }
 
@@ -43,9 +43,9 @@ class CommitteeController(
             val userandcommittees = committeeService.getUserAndCommittees()
             ResponseEntity.ok(userandcommittees)
         } catch (e: Exception) {
-            logger.error("Error in getUserAndCommittees", e)  // Add this
-            e.printStackTrace()  // Or this for quick debugging
-            ResponseEntity.badRequest().build()
+            logger.error("Error in getUserAndCommittees", e)
+            e.printStackTrace()
+            ResponseEntity.internalServerError().build()
         }
     }
 }
