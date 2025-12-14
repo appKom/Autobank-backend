@@ -73,6 +73,13 @@ class AuthenticationService(
     }
 
     fun getUserDetails(): Auth0User {
+
+        if (environment != "prod") {
+            val sub = getUserSub()
+            // Return mock/minimal user data for local dev
+            return Auth0User(sub, "dev@example.com", "Dev User")
+        }
+
         val endpoint = UriComponentsBuilder
             .fromHttpUrl("${apiBaseDomain}user.getMe")
             .encode()
