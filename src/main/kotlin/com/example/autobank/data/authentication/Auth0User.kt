@@ -1,6 +1,5 @@
 package com.example.autobank.data.authentication
 
-import com.nimbusds.openid.connect.sdk.claims.Gender
 import org.jetbrains.annotations.NotNull
 import io.swagger.v3.oas.annotations.media.Schema
 

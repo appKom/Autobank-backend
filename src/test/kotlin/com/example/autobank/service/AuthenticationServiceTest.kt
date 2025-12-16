@@ -23,6 +23,22 @@ class AuthenticationServiceTest : FunSpec({
         this.onlineUserRepository = onlineUserRepository
     }
 
+    context("getAuth0User") {
+        test("should return Auth0User with provided token") {
+            // Given
+            val token = "test-token"
+
+            // When
+            val result = authenticationService.getAuth0User(token)
+
+            // Then
+            result shouldNotBe null
+            result.sub shouldBe "sub"
+            result.email shouldBe "email"
+            result.name shouldBe "name"
+        }
+    }
+
     context("getUserSub") {
         test("should return empty string when no authentication context") {
             // When
