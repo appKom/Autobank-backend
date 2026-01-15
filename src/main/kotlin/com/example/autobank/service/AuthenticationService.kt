@@ -59,7 +59,7 @@ class AuthenticationService(
     }
 
     fun getFullName(): String {
-       return "skjdfh";
+       return "";
     }
 
     fun getAccessToken(): String {
