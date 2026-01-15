@@ -59,7 +59,7 @@ class AuthenticationService(
     }
 
     fun getFullName(): String {
-       return "";
+       return "skjdfh";
     }
 
     fun getAccessToken(): String {
@@ -144,25 +144,29 @@ class AuthenticationService(
     }
 
     fun checkAdmin(): Boolean {
+        // Use the Auth0 sub to find the user in your local DB
+        val auth0Sub = getUserSub()
+        val user = onlineUserRepository.findByOnlineId(auth0Sub) ?: throw Exception("User not found")
 
-        val user = onlineUserRepository.findByOnlineId(getUserSub()) ?: throw Exception("User not found");
+        val now = LocalDateTime.now()
+        val hoursSinceUpdate = Duration.between(user.lastUpdated, now).toHours()
 
-        // Time check for users last update isAdmin
-        if (Duration.between(user.lastUpdated, LocalDateTime.now()).toMillis() > adminRecheckTime) {
-            user.lastUpdated = LocalDateTime.now()
+        // If never updated or 24h passed
+        if (user.lastUpdated == null || hoursSinceUpdate >= 24) {
 
-            // Check if the user is admin and set bool accordingly
-            user.isAdmin = fetchUserCommittees().contains(adminCommittee)
+            // This function calls user.getMe to get the internal UUID
+            // and then calls group.allByMember
+            val committees = fetchUserCommittees()
 
-            // I dont know what this is
+            user.isAdmin = committees.contains(adminCommittee)
+            user.lastUpdated = now
+
+            // onlineUserRepository.save(user) persists the isAdmin status
+            // to your database so you don't have to call the API every time.
             onlineUserRepository.save(user)
         }
 
-        if (user.isAdmin) {
-            return true;
-        }
-
-        return false;
+        return user.isAdmin
     }
 
     fun getExpiresAt(): Instant? {
