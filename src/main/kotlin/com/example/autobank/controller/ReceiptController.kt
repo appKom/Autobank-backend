@@ -39,7 +39,7 @@ class ReceiptController {
             ResponseEntity.ok(res)
         } catch (e: Exception) {
             e.printStackTrace()
-            ResponseEntity.internalServerError().build()
+            ResponseEntity.badRequest().build()
         }
     }
 
@@ -50,7 +50,7 @@ class ReceiptController {
             val res = receiptService.getReceipt(id)
             ResponseEntity.ok(res)
         } catch (e: Exception) {
-            ResponseEntity.internalServerError().build()
+            ResponseEntity.badRequest().build()
         }
     }
 

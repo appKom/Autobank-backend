@@ -6,8 +6,9 @@ import com.example.autobank.data.receipt.ReceiptInfoResponseBody
 import com.example.autobank.repository.receipt.*
 import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
 import org.springframework.stereotype.Service
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import com.example.autobank.service.MailService
 
 @Service
 class ReceiptService(
@@ -16,7 +17,8 @@ class ReceiptService(
     private val blobService: BlobService,
     private val attachmentService: AttachmentService,
     private val committeeService: CommitteeService,
-    private val receiptInfoRepository: ReceiptInfoRepositoryImpl
+    private val receiptInfoRepository: ReceiptInfoRepositoryImpl,
+    private val mailService: MailService
 ) {
 
 
@@ -62,7 +64,6 @@ class ReceiptService(
 
         val storedReceipt = receiptRepository.save(receipt);
 
-
         /**
          * Save attachments
          */
@@ -82,6 +83,27 @@ class ReceiptService(
         }
 
 
+        val emailContent = """
+            <h2>Detaljer for innsendt kvittering</h2>
+            <p><strong>Bruker:</strong> ${user.fullname}</p>
+            <p><strong>Brukerens e-post:</strong> ${user.email}</p>
+            <p><strong>Kvitterings-ID:</strong> ${storedReceipt.id}</p>
+            <p><strong>Beløp:</strong> ${storedReceipt.amount}</p>
+            <p><strong>Komité-ID:</strong> ${storedReceipt.committee.name}</p>
+            <p><strong>Anledning:</strong> ${storedReceipt.name}</p>
+            <p><strong>Beskrivelse:</strong> ${storedReceipt.description}</p>
+            <p><strong>Betalingsmetode:</strong> ${
+                if (receiptRequestBody.receiptPaymentInformation?.usedOnlineCard == true)
+                    "Online-kort"
+                else
+                    "Bankoverføring"
+                }</p>
+            <p><strong>Kontonummer:</strong> ${
+                receiptRequestBody.receiptPaymentInformation?.accountnumber ?: "Ikke oppgitt"
+            }</p>
+        """.trimIndent()
+
+        mailService.sendEmail(user.email, "Receipt Submission Details", emailContent)
         return  ReceiptResponseBody()
 
     }
