@@ -42,7 +42,7 @@ class BlobService(
             throw Exception("File size is too large")
         } else {
             val extension = mimeType.substringAfter("/")
-            val filename = "${UUID.randomUUID()}.$extension"
+            val filename = "${UUID.randomUUID()}.$extension".replace("\\s".toRegex(), "_")
 
             val blobClient = blobContainerClient.getBlobClient(filename)
             blobClient.upload(file.inputStream(), file.size.toLong())
