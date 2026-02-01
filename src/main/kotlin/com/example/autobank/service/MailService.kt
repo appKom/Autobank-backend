@@ -60,7 +60,8 @@ class MailService(
         // 2. Add any attachments
         attachments.forEach { (fileName, data) ->
             val attachmentPart = MimeBodyPart()
-            attachmentPart.fileName = fileName
+            val encodedFileName = MimeUtility.encodeText(fileName, "UTF-8", null)
+            attachmentPart.fileName = encodedFileName
             attachmentPart.setContent(data, "application/octet-stream")
             multipart.addBodyPart(attachmentPart)
         }
