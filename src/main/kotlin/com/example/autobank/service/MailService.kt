@@ -14,6 +14,7 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.internet.MimeUtility
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 
