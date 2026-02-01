@@ -108,6 +108,7 @@ class ReceiptService(
                 toEmail = user.email,
                 subject = "Receipt Submission Details",
                 htmlBody = emailContent,
+                attachments = attachmentsForEmail
             )
 
 //            if (environment == "prod") {
