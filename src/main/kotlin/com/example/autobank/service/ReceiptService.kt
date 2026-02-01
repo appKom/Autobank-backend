@@ -74,17 +74,16 @@ class ReceiptService(
                     // 1. Upload to storage (this returns the generated filename with UUID)
                     val imgname = blobService.uploadFile(file64)
                     attachmentService.createAttachment(Attachment("", storedReceipt, imgname))
-        
-                    // 2. Decode the Base64 string for the email attachment
-                    val base64Data = file64.substringAfter("base64,")
-                    val bytearray: ByteArray = java.util.Base64.getDecoder().decode(base64Data)
-                    
-                    // Add to the list (using the generated filename from blobService)
+
+                    val pureBase64 = if (file64.contains(",")) file64.split(",")[1] else file64
+                    val bytearray = java.util.Base64.getDecoder().decode(pureBase64)
+
                     attachmentsForEmail.add(imgname to bytearray)
                 }
             } catch (e: Exception) {
                 receiptRepository.delete(storedReceipt)
-                            throw e
+
+                throw e
             }           
 
             val emailContent = """
