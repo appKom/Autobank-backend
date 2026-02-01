@@ -43,6 +43,8 @@ class BlobService(
         } else {
             val extension = mimeType.substringAfter("/")
             val filename = "${UUID.randomUUID()}.$extension"
+
+            val blobClient = blobContainerClient.getBlobClient(filename)
             blobClient.upload(file.inputStream(), file.size.toLong())
 
             println("Uploaded image to $filename")
