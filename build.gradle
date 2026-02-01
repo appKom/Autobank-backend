@@ -62,6 +62,7 @@ dependencies {
     implementation("software.amazon.awssdk:ses")
     implementation("software.amazon.awssdk:auth")
     implementation("software.amazon.awssdk:regions")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 
     implementation "com.microsoft.sqlserver:mssql-jdbc:${mssqlJdbcVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-web'

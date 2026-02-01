@@ -4,9 +4,19 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ses.SesClient
 import software.amazon.awssdk.services.ses.model.*
+import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.internet.MimeUtility
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 @Service
 class MailService(
@@ -23,36 +33,59 @@ class MailService(
         )
         .build()
 
-    fun sendEmail(toEmail: String, subject: String, htmlBody: String) {
-        val destination = Destination.builder()
-            .toAddresses(toEmail)
+    /**
+     * Sends an email via AWS SES.
+     * If [attachments] is provided, it sends a Raw MIME message.
+     */
+    fun sendEmail(
+        toEmail: String,
+        subject: String,
+        htmlBody: String,
+        attachments: List<Pair<String, ByteArray>> = emptyList()
+    ) {
+        val session = Session.getDefaultInstance(Properties())
+        val message = MimeMessage(session)
+
+        message.setSubject(subject, "UTF-8")
+        message.setFrom(InternetAddress("kvittering@online.ntnu.no"))
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
+
+        // Create a multipart container to hold the text and the files
+        val multipart = MimeMultipart()
+
+        // 1. Add the HTML content
+        val htmlPart = MimeBodyPart()
+        htmlPart.setContent(htmlBody, "text/html; charset=UTF-8")
+        multipart.addBodyPart(htmlPart)
+
+        // 2. Add any attachments
+        attachments.forEach { (fileName, data) ->
+            val attachmentPart = MimeBodyPart()
+            val encodedFileName = MimeUtility.encodeText(fileName, "UTF-8", null)
+            attachmentPart.fileName = encodedFileName
+            attachmentPart.setContent(data, "application/octet-stream")
+            multipart.addBodyPart(attachmentPart)
+        }
+
+        message.setContent(multipart)
+
+        // Convert the MimeMessage to a format AWS SES understands
+        val outputStream = ByteArrayOutputStream()
+        message.writeTo(outputStream)
+
+        val rawMessage = RawMessage.builder()
+            .data(SdkBytes.fromByteArray(outputStream.toByteArray()))
             .build()
 
-        val content = Content.builder()
-            .data(subject)
-            .charset("UTF-8")
-            .build()
-
-        val body = Body.builder()
-            .html(Content.builder().data(htmlBody).charset("UTF-8").build())
-            .build()
-
-        val message = Message.builder()
-            .subject(content)
-            .body(body)
-            .build()
-
-        val request = SendEmailRequest.builder()
-            .destination(destination)
-            .message(message)
-            .source("kvittering@online.ntnu.no") 
+        val request = SendRawEmailRequest.builder()
+            .rawMessage(rawMessage)
             .build()
 
         try {
-            sesClient.sendEmail(request)
-            println("Email sent successfully to $toEmail")
+            sesClient.sendRawEmail(request)
+            println("Email sent successfully to $toEmail ${if(attachments.isNotEmpty()) "with attachments" else ""}")
         } catch (e: SesException) {
-            println("Failed to send email: ${e.awsErrorDetails().errorMessage()}")
+            println("Failed to send email via SES: ${e.awsErrorDetails().errorMessage()}")
             throw e
         }
     }

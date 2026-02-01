@@ -61,52 +61,72 @@ class ReceiptService(
 
         )
 
+            val storedReceipt = receiptRepository.save(receipt)
 
-        val storedReceipt = receiptRepository.save(receipt);
+            /**
+             * Save attachments and prepare for email
+             */
+            val attachments = receiptRequestBody.attachments
+            val attachmentsForEmail = mutableListOf<Pair<String, ByteArray>>()
 
-        /**
-         * Save attachments
-         */
+            try {
+                attachments.forEach { file64 ->
+                    // 1. Upload to storage (this returns the generated filename with UUID)
+                    val imgname = blobService.uploadFile(file64)
+                    attachmentService.createAttachment(Attachment("", storedReceipt, imgname))
 
-        val attachments = receiptRequestBody.attachments
-        val attachmentsnames = mutableListOf<String>()
-        try {
-            attachments.forEach { attachment ->
-                val imgname = blobService.uploadFile(attachment)
-                attachmentService.createAttachment(Attachment("", storedReceipt, imgname))
-                println("Attachent name: $imgname")
-                attachmentsnames.add(imgname)
-            }
-        } catch (e: Exception) {
-            receiptRepository.delete(storedReceipt)
-            throw e;
+                    val pureBase64 = if (file64.contains(",")) file64.split(",")[1] else file64
+                    val bytearray = java.util.Base64.getDecoder().decode(pureBase64)
+
+                    attachmentsForEmail.add(imgname to bytearray)
+                }
+            } catch (e: Exception) {
+                receiptRepository.delete(storedReceipt)
+
+                throw e
+            }           
+
+            val emailContent = """
+                <h2>Detaljer for innsendt kvittering</h2>
+                <p><strong>Bruker:</strong> ${user.fullname}</p>
+                <p><strong>Brukerens e-post:</strong> ${user.email}</p>
+                <p><strong>Kvitterings-ID:</strong> ${storedReceipt.id}</p>
+                <p><strong>Beløp:</strong> ${storedReceipt.amount}</p>
+                <p><strong>Komité-ID:</strong> ${storedReceipt.committee.name}</p>
+                <p><strong>Anledning:</strong> ${storedReceipt.name}</p>
+                <p><strong>Beskrivelse:</strong> ${storedReceipt.description}</p>
+                <p><strong>Betalingsmetode:</strong> ${
+                    if (receiptRequestBody.receiptPaymentInformation?.usedOnlineCard == true) "Online-kort" else "Bankoverføring"
+                }</p>
+                <p><strong>Kontonummer:</strong> ${
+                    receiptRequestBody.receiptPaymentInformation?.accountnumber ?: "Ikke oppgitt"
+                }</p>
+            """.trimIndent()
+
+            // 3. Send email with the collected attachments
+            mailService.sendEmail(
+                toEmail = user.email,
+                subject = "Receipt Submission Details",
+                htmlBody = emailContent,
+                attachments = attachmentsForEmail
+            )
+
+//            if (environment == "prod") {
+//                mailService.sendEmail(
+//                    toEmail = "online-linjeforeningen-for-informatikk1@bilag.fiken.no",
+//                    subject = "Kvittering: ${user.fullname} - ${storedReceipt.name}",
+//                    attachments = attachmentsForEmail,
+//                    htmlBody = emailContent
+//                )
+//                println("Email sent to Fiken")
+//            }
+
+            return ReceiptResponseBody()
         }
 
 
-        val emailContent = """
-            <h2>Detaljer for innsendt kvittering</h2>
-            <p><strong>Bruker:</strong> ${user.fullname}</p>
-            <p><strong>Brukerens e-post:</strong> ${user.email}</p>
-            <p><strong>Kvitterings-ID:</strong> ${storedReceipt.id}</p>
-            <p><strong>Beløp:</strong> ${storedReceipt.amount}</p>
-            <p><strong>Komité-ID:</strong> ${storedReceipt.committee.name}</p>
-            <p><strong>Anledning:</strong> ${storedReceipt.name}</p>
-            <p><strong>Beskrivelse:</strong> ${storedReceipt.description}</p>
-            <p><strong>Betalingsmetode:</strong> ${
-                if (receiptRequestBody.receiptPaymentInformation?.usedOnlineCard == true)
-                    "Online-kort"
-                else
-                    "Bankoverføring"
-                }</p>
-            <p><strong>Kontonummer:</strong> ${
-                receiptRequestBody.receiptPaymentInformation?.accountnumber ?: "Ikke oppgitt"
-            }</p>
-        """.trimIndent()
 
-        mailService.sendEmail(user.email, "Receipt Submission Details", emailContent)
-        return  ReceiptResponseBody()
 
-    }
 
     fun getAllReceiptsFromUser(from: Int, count: Int, status: String?, committeeName: String?, search: String?, sortField: String?, sortOrder: String?): ReceiptListResponseBody? {
 
