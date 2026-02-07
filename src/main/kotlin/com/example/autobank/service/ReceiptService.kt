@@ -5,6 +5,7 @@ import com.example.autobank.data.receipt.*
 import com.example.autobank.data.receipt.ReceiptInfoResponseBody
 import com.example.autobank.repository.receipt.*
 import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -18,7 +19,8 @@ class ReceiptService(
     private val attachmentService: AttachmentService,
     private val committeeService: CommitteeService,
     private val receiptInfoRepository: ReceiptInfoRepositoryImpl,
-    private val mailService: MailService
+    private val mailService: MailService,
+    @Value("\${environment}") private val environment: String
 ) {
 
 
@@ -111,15 +113,15 @@ class ReceiptService(
                 attachments = attachmentsForEmail
             )
 
-//            if (environment == "prod") {
-//                mailService.sendEmail(
-//                    toEmail = "online-linjeforeningen-for-informatikk1@bilag.fiken.no",
-//                    subject = "Kvittering: ${user.fullname} - ${storedReceipt.name}",
-//                    attachments = attachmentsForEmail,
-//                    htmlBody = emailContent
-//                )
-//                println("Email sent to Fiken")
-//            }
+            if (environment == "prod") {
+                mailService.sendEmail(
+                    toEmail = "online-linjeforeningen-for-informatikk1@bilag.fiken.no",
+                    subject = "Kvittering: ${user.fullname} - ${storedReceipt.name}",
+                    attachments = attachmentsForEmail,
+                    htmlBody = emailContent
+                )
+                println("Email sent to Fiken")
+            }
 
             return ReceiptResponseBody()
         }
