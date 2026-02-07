@@ -20,14 +20,14 @@ class ReceiptController {
 
     @Operation(summary = "Create a new receipt", description = "Create a new receipt for the authenticated user")
     @PostMapping("/create")
-    fun createReceipt(@RequestBody receipt: ReceiptRequestBody): ResponseEntity<Any> {
+    fun createReceipt(@RequestBody receipt: ReceiptRequestBody): ResponseEntity<ReceiptResponseBody> {
         return try {
             val res = receiptService.createReceipt(receipt)
             ResponseEntity.ok(res)
         } catch (e: Exception) {
             println("Receipt creation failed: ${e.message}")
             e.printStackTrace()
-            ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "Unknown error")))
+            ResponseEntity.badRequest().build()
         }
     }
 
