@@ -137,7 +137,7 @@ class ReceiptService(
         val sort = if (!sortField.isNullOrEmpty()) {
             Sort.by(Sort.Direction.fromString(sortOrder ?: "ASC"), sortField)
         } else {
-            Sort.by(Sort.Direction.DESC, "receiptCreatedAt")
+            Sort.by(Sort.Direction.DESC, "createdat")
         }
         val pageable = PageRequest.of(from, count, sort)
 

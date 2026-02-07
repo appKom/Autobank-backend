@@ -100,6 +100,18 @@ class ReceiptInfoRepositoryImpl(
 
         cq.where(spec.toPredicate(root, cq, cb))
 
+        // Apply sort from Pageable
+        if (pageable.sort.isSorted) {
+            val orders = pageable.sort.map { order ->
+                if (order.isAscending) {
+                    cb.asc(root.get<Any>(order.property))
+                } else {
+                    cb.desc(root.get<Any>(order.property))
+                }
+            }.toList()
+            cq.orderBy(orders)
+        }
+
         val query = em.createQuery(cq)
 
         query.firstResult = pageable.offset.toInt()
