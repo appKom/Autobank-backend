@@ -73,12 +73,10 @@ class BlobService(
             else -> "bin"
         }
 
-        // 2. Create the legacy part (For Frontend compatibility)
-        // The frontend likely parses "image:png" from the name
         val legacyMimePart = mimeType.replace('/', ':')
 
-        // 3. Combine them: UUID + Legacy Part + Standard Extension
-        // Result: "550e8400-e29b.image:png.png"
+        // Combine UUID + Legacy Part + Standard Extension
+        // Result: ".image:png.png"
         val filename = "${UUID.randomUUID()}.$legacyMimePart.$extension"
 
         val blobClient = blobContainerClient.getBlobClient(filename)
