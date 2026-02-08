@@ -5,7 +5,6 @@ import com.example.autobank.data.receipt.*
 import com.example.autobank.data.receipt.ReceiptInfoResponseBody
 import com.example.autobank.repository.receipt.*
 import com.example.autobank.repository.receipt.specification.ReceiptInfoViewSpecification
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -19,8 +18,7 @@ class ReceiptService(
     private val attachmentService: AttachmentService,
     private val committeeService: CommitteeService,
     private val receiptInfoRepository: ReceiptInfoRepositoryImpl,
-    private val mailService: MailService,
-    @Value("\${environment}") private val environment: String
+    private val mailService: MailService
 ) {
 
 
