@@ -66,14 +66,8 @@ class BlobService(
             throw Exception("File size is too large: ${file.size} bytes (max: $maxFileSize bytes)")
         }
 
-        val extension = when(mimeType) {
-            "image/jpeg", "image/jpg" -> "jpg"
-            "image/png" -> "png"
-            "application/pdf" -> "pdf"
-            else -> "bin"
-        }
-        val filename = "${UUID.randomUUID()}.$extension"
-        val blobClient = blobContainerClient.getBlobClient(filename)
+        val filename = UUID.randomUUID().toString() + "." + mimeType.replace('/', ':')
+        val blobClient = blobContainerClient.getBlobClient("$filename.")
         blobClient.upload(file.inputStream(), file.size.toLong())
 
         println("Uploaded file: $filename")
