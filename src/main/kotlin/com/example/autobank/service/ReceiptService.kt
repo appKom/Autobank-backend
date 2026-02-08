@@ -113,15 +113,15 @@ class ReceiptService(
                 attachments = attachmentsForEmail
             )
 
-            if (environment == "prod") {
-                mailService.sendEmail(
-                    toEmail = "online-linjeforeningen-for-informatikk1@bilag.fiken.no",
-                    subject = "Kvittering: ${user.fullname} - ${storedReceipt.name}",
-                    attachments = attachmentsForEmail,
-                    htmlBody = emailContent
-                )
-                println("Email sent to Fiken")
-            }
+//            if (environment == "prod") {
+//                mailService.sendEmail(
+//                    toEmail = "online-linjeforeningen-for-informatikk1@bilag.fiken.no",
+//                    subject = "Kvittering: ${user.fullname} - ${storedReceipt.name}",
+//                    attachments = attachmentsForEmail,
+//                    htmlBody = emailContent
+//                )
+//                println("Email sent to Fiken")
+//            }
 
             return ReceiptResponseBody()
         }

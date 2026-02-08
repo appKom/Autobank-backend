@@ -65,9 +65,15 @@ class BlobService(
         if (file.size > maxFileSize) {
             throw Exception("File size is too large: ${file.size} bytes (max: $maxFileSize bytes)")
         }
-        
-        val filename = UUID.randomUUID().toString() + "." + mimeType.replace('/', ':')
-        val blobClient = blobContainerClient.getBlobClient("$filename.")
+
+        val extension = when(mimeType) {
+            "image/jpeg", "image/jpg" -> "jpg"
+            "image/png" -> "png"
+            "application/pdf" -> "pdf"
+            else -> "bin"
+        }
+        val filename = "${UUID.randomUUID()}.$extension"
+        val blobClient = blobContainerClient.getBlobClient(filename)
         blobClient.upload(file.inputStream(), file.size.toLong())
 
         println("Uploaded file: $filename")
@@ -80,25 +86,32 @@ class BlobService(
      * 2. Legacy format: "image/png.iVBORw0KGgo..." or "image:png.iVBORw0KGgo..."
      */
     private fun parseAttachment(file64: String): Pair<String, String> {
-        return when {
+        val (rawMime, base64Data) = when {
             // Standard data URL format
             file64.startsWith("data:") && file64.contains(";base64,") -> {
                 val mimeType = file64.substringAfter("data:").substringBefore(";base64")
-                val base64Data = file64.substringAfter("base64,")
-                Pair(mimeType, base64Data)
+                val data = file64.substringAfter("base64,")
+                Pair(mimeType, data)
             }
-            // Legacy format: "image/png.base64data" or "image:png.base64data"
+            // Legacy/Email format
             file64.contains(".") -> {
                 val firstDotIndex = file64.indexOf(".")
                 val mimeTypePart = file64.substring(0, firstDotIndex)
-                val mimeType = mimeTypePart.replace(":", "/")
-                val base64Data = file64.substring(firstDotIndex + 1)
-                Pair(mimeType, base64Data)
+                val data = file64.substring(firstDotIndex + 1)
+                Pair(mimeTypePart, data)
             }
-            else -> {
-                throw Exception("Invalid attachment format")
-            }
+            else -> throw Exception("Invalid attachment format")
         }
+
+        // NORMALIZATION STEP:
+        // Convert 'image.jpeg' or 'application-pdf' into 'image/jpeg' or 'application/pdf'
+        val normalizedMime = rawMime
+            .replace(".", "/")
+            .replace("-", "/")
+            .replace(":", "/")
+            .lowercase()
+
+        return Pair(normalizedMime, base64Data)
     }
 
     private fun resizeImage(imageData: ByteArray, type: String): ByteArray {
