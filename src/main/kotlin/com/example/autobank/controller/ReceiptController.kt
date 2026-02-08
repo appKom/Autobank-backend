@@ -25,10 +25,10 @@ class ReceiptController {
             val res = receiptService.createReceipt(receipt)
             ResponseEntity.ok(res)
         } catch (e: Exception) {
-            println("Receipt creation failed: ${e.message}")
-            e.printStackTrace()
+            println(e)
             ResponseEntity.badRequest().build()
         }
+
     }
 
     @Operation(summary = "Get all receipts for user", description = "Retrieve a list of all receipts for the authenticated user")
