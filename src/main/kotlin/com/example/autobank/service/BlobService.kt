@@ -25,87 +25,29 @@ class BlobService(
             .getBlobContainerClient(containerName)
 
     fun uploadFile(file64: String): String {
-        // Log the first 100 characters to debug format issues
-        println("Attachment data prefix: ${file64.take(100)}")
-        
-        // Parse the attachment - support both formats:
-        // 1. Data URL format: "data:image/png;base64,iVBORw0KGgo..."
-        // 2. Legacy format: "image/png.iVBORw0KGgo..." or "image:png.iVBORw0KGgo..."
-        val (mimeType, base64Data) = parseAttachment(file64)
-        
-        println("Attempting to upload file with MIME type: $mimeType")
-        
+        val base64Data = file64.substringAfter("base64,")
+        val mimeType = file64.substringAfter("data:").substringBefore(";base64")
         if (mimeType !in ALLOWED_MIME_TYPES) {
-            println("Rejected file with unsupported MIME type: $mimeType")
-            throw Exception("Invalid file type: $mimeType. Allowed types: JPEG, PNG, or PDF")
+            throw Exception("Invalid file type")
         }
 
-        val bytearray: ByteArray = try {
-            Base64.getDecoder().decode(base64Data)
-        } catch (e: Exception) {
-            println("ERROR: Failed to decode base64 data: ${e.message}")
-            throw Exception("Failed to decode attachment: ${e.message}")
-        }
-        println("Original file size: ${bytearray.size} bytes")
-        
-        // Resize images, keep PDFs as-is
-        val file: ByteArray = if (mimeType.startsWith("image/")) {
-            try {
-                resizeImage(bytearray, mimeType.split("/")[1])
-            } catch (e: Exception) {
-                println("Error resizing image: ${e.message}")
-                throw Exception("Failed to process image: ${e.message}")
-            }
+        val bytearray: ByteArray = Base64.getDecoder().decode(base64Data)
+        val file: ByteArray = if (mimeType.contains("image")) {
+            resizeImage(bytearray, mimeType.split("/")[1])
         } else {
             bytearray
         }
-        
-        println("Processed file size: ${file.size} bytes")
 
         if (file.size > maxFileSize) {
-            throw Exception("File size is too large: ${file.size} bytes (max: $maxFileSize bytes)")
+            throw Exception("File size is too large")
+        } else {
+            val filename = UUID.randomUUID().toString() +"."+ mimeType.replace('/', ':')
+            val blobClient = blobContainerClient.getBlobClient("$filename.");
+            blobClient.upload(file.inputStream(), file.size.toLong())
+
+            println("Uploaded image to $filename")
+            return filename
         }
-
-        val filename = UUID.randomUUID().toString() + "." + mimeType.replace('/', ':')
-        val blobClient = blobContainerClient.getBlobClient("$filename.")
-        blobClient.upload(file.inputStream(), file.size.toLong())
-
-        println("Uploaded file: $filename")
-        return filename
-    }
-
-    /**
-     * Parse attachment data from either format:
-     * 1. Data URL format: "data:image/png;base64,iVBORw0KGgo..."
-     * 2. Legacy format: "image/png.iVBORw0KGgo..." or "image:png.iVBORw0KGgo..."
-     */
-    private fun parseAttachment(file64: String): Pair<String, String> {
-        val (rawMime, base64Data) = when {
-            // Standard data URL format
-            file64.startsWith("data:") && file64.contains(";base64,") -> {
-                val mimeType = file64.substringAfter("data:").substringBefore(";base64")
-                val data = file64.substringAfter("base64,")
-                Pair(mimeType, data)
-            }
-            // Legacy/Email format
-            file64.contains(".") -> {
-                val firstDotIndex = file64.indexOf(".")
-                val mimeTypePart = file64.substring(0, firstDotIndex)
-                val data = file64.substring(firstDotIndex + 1)
-                Pair(mimeTypePart, data)
-            }
-            else -> throw Exception("Invalid attachment format")
-        }
-
-        // NORMALIZATION STEP:
-        // Convert 'image.jpeg' or 'application-pdf' into 'image/jpeg' or 'application/pdf'
-        val normalizedMime = rawMime
-            .replace(".", "/")
-            .replace("-", "/")
-            .replace(":", "/")
-            .lowercase()
-
-        return Pair(normalizedMime, base64Data)
     }
 
     private fun resizeImage(imageData: ByteArray, type: String): ByteArray {
