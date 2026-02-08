@@ -72,7 +72,15 @@ class BlobService(
             "application/pdf" -> "pdf"
             else -> "bin"
         }
-        val filename = "${UUID.randomUUID()}.$extension"
+
+        // 2. Create the legacy part (For Frontend compatibility)
+        // The frontend likely parses "image:png" from the name
+        val legacyMimePart = mimeType.replace('/', ':')
+
+        // 3. Combine them: UUID + Legacy Part + Standard Extension
+        // Result: "550e8400-e29b.image:png.png"
+        val filename = "${UUID.randomUUID()}.$legacyMimePart.$extension"
+
         val blobClient = blobContainerClient.getBlobClient(filename)
         blobClient.upload(file.inputStream(), file.size.toLong())
 
