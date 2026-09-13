@@ -80,7 +80,7 @@ class AuthenticationService(
             val sub = getUserSub()
             // Return mock/minimal user data for local dev
             // Switch mail to your own email to avoid confusion when testing
-            return Auth0User(sub, "amund.dahlmo.berge@online.ntnu.no", "Dev User", "https://ca.slack-edge.com/T018UHUSG4E-U06LJ0DGCDB-d0914116e82e-512")
+            return Auth0User(sub, "online.appkom@gmail.com", "Dev User", null)
         }
 
         val endpoint = UriComponentsBuilder
