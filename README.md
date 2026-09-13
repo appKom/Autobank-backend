@@ -8,16 +8,62 @@ Autobank is a Kotlin Spring Boot application designed for managing financial rec
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/appKom/gnocchitony.git
-   cd gnocchitony
+   git clone https://github.com/appKom/Autobank-backend.git
+   cd Autobank-backend
    ```
 
 2. **Configure environment variables**
 
 3. **Run the application**
-   ```bash
-   ./gradlew bootRun
-   ```
+### Running the backend locally
+
+#### 1. Start the local dev database
+
+Make sure Docker is running, then run:
+
+```bash
+docker compose up -d
+```
+
+#### 2. Start Azurite
+
+Azurite is used as a local Azure Storage emulator.
+
+First, try:
+
+```bash
+azurite --loose --skipApiVersionCheck --location ~/.azurite
+```
+
+If `azurite` is not available as a command, check where global npm packages are installed:
+
+```bash
+npm prefix -g
+```
+
+Example output when using `nvm`:
+
+```bash
+/Users/<username>/.nvm/versions/node/v22.13.0
+```
+
+Then run Azurite directly from the `bin` folder:
+
+```bash
+~/.nvm/versions/node/v22.13.0/bin/azurite --loose --skipApiVersionCheck --location ~/.azurite
+```
+
+If Azurite is not installed, install it globally:
+
+```bash
+npm install -g azurite
+```
+
+#### 3. Start the backend
+
+```bash
+./gradlew bootRun
+```
 
 The application will start on `http://localhost:8080`
 

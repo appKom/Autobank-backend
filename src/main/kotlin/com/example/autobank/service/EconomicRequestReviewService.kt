@@ -1,49 +1,53 @@
-/*package com.example.autobank.service
+package com.example.autobank.service
 
+import com.example.autobank.data.economicrequest.EconomicrequestReviewRequestBody
+import com.example.autobank.data.economicrequest.EconomicrequestReviewResponseBody
 import com.example.autobank.data.models.EconomicRequestReview
-import com.example.autobank.data.models.Economicrequest
-import com.example.autobank.data.user.OnlineUser
+import com.example.autobank.data.models.EconomicRequestStatus
 import com.example.autobank.repository.EconomicRequestReviewRepository
-import org.springframework.beans.factory.annotation.Autowired
+import com.example.autobank.repository.EconomicrequestRepository
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
-class EconomicRequestReviewService {
-    @Autowired
-    lateinit var economicRequestReviewRepository: EconomicRequestReviewRepository
-    fun checkIfRequest(economicrequest: Economicrequest): Boolean {
-        return economicRequestReviewRepository.existsByEconomicRequestId(economicrequest.id)
-    }
+class EconomicRequestReviewService(
+    private val economicRequestReviewRepository: EconomicRequestReviewRepository,
+    private val onlineUserService: OnlineUserService,
+    private val economicrequestRepository: EconomicrequestRepository,
+) {
 
-    fun createEconomicrequestReview(
-        status: Boolean,
-        user: OnlineUser,
-        description: String,
-        economicrequest: Economicrequest
-    ) {
-       /* val dato = LocalDateTime.now()
-        val economicRequestReview = EconomicRequestReview(
-            id = -1,
-            economicrequestId = economicrequest.id,
-            createdat = dato,
-            onlineUserId = user.onlineId,
-            comment = description,
-            status = status
+    fun createEconomicrequestReview(reviewBody: EconomicrequestReviewRequestBody): EconomicrequestReviewResponseBody {
+        val onlineuser = onlineUserService.getOnlineUser() ?: throw Exception("User not found")
+
+        if (reviewBody.status != "APPROVED" && reviewBody.status != "DENIED") {
+            throw Exception("Invalid status")
+        }
+
+        val economicrequest = economicrequestRepository.findById(reviewBody.economicrequestId)
+            .orElseThrow { Exception("Economic request not found") }
+
+        val prevReview = economicRequestReviewRepository.findFirstByEconomicrequestId(reviewBody.economicrequestId)
+        if (prevReview != null) {
+            economicRequestReviewRepository.deleteByEconomicrequestId(reviewBody.economicrequestId)
+        }
+
+        val savedReview = economicRequestReviewRepository.save(
+            EconomicRequestReview(
+                "",
+                economicrequest,
+                enumValueOf<EconomicRequestStatus>(reviewBody.status),
+                reviewBody.comment,
+                onlineuser,
+                null,
+            )
         )
-        economicRequestReviewRepository.save(economicRequestReview)
-*/
-    }
 
-    fun updateStatus(economicRequestReview: EconomicRequestReview, status: Boolean) {
-        economicRequestReviewRepository.findEconomicRequestReviewsEconomicRequestIdAndUpdateStatus(
-            economicRequestReview.id,
-            status
+        return EconomicrequestReviewResponseBody(
+            id = savedReview.id,
+            economicrequestId = savedReview.economicrequest.id,
+            status = savedReview.status,
+            comment = savedReview.comment,
+            onlineUserId = savedReview.user.id,
+            createdAt = savedReview.createdat,
         )
     }
-
-    fun getReview(economicrequest: Economicrequest): EconomicRequestReview {
-        return economicRequestReviewRepository.getEconomicRequestReviewByEconomicRequestId(economicrequest.id)
-
-    }
-}*/
+}

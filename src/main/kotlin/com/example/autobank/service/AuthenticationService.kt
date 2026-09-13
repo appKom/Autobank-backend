@@ -117,9 +117,8 @@ class AuthenticationService(
 
         val userId = getUserDetails().sub
 
-        // tRPC format: {"json":"<value>"}
-        // The value itself is the user ID string
-        val input = """{"json":"$userId"}"""
+        // tRPC format: {"json":{"userId":"<value>"}}
+        val input = ObjectMapper().writeValueAsString(mapOf("json" to mapOf("userId" to userId)))
         val encodedInput = URLEncoder.encode(input, StandardCharsets.UTF_8.toString())
         val urlString = "${apiBaseDomain}group.allByMember?input=$encodedInput"
 

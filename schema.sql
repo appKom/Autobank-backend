@@ -41,15 +41,14 @@ CREATE TABLE economicrequest
     subject            VARCHAR(55)    NOT NULL,
     purpose            VARCHAR(500)   NOT NULL,
     date               DATE           NOT NULL,
-    duration           VARCHAR(255)   NOT NULL,
     description        VARCHAR(500)   NOT NULL,
     amount             DECIMAL(10, 2) NOT NULL,
-    personcount        INT            NOT NULL,
-    names              VARCHAR(500)   NOT NULL,
     paymentdescription varchar(255)   NOT NULL,
-    otherinformation   VARCHAR(500)   NOT NULL,
+    otherinformation   VARCHAR(500),
     createdat          DATETIME       NOT NULL,
-    onlineuser_id      UNIQUEIDENTIFIER             NOT NULL references onlineuser (id)
+    onlineuser_id      UNIQUEIDENTIFIER             NOT NULL references onlineuser (id),
+    committee_id       VARCHAR(255)                 NULL references committee (id),
+    onlinemail         VARCHAR(255)                 NULL
 );
 
 CREATE TABLE receiptreview

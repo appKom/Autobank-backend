@@ -3,6 +3,7 @@ package com.example.autobank.service
 import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.BlobServiceClientBuilder
 import net.coobird.thumbnailator.Thumbnails
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
@@ -17,50 +18,51 @@ const val maxFileSize = 5 * 1024 * 1024
 @Service
 class BlobService(
     @Value("\${azure.storage.connection-string}") private val connectionString: String? = null,
-    @Value("\${azure.storage.container-name}") private val containerName: String? = null
+    @Value("\${azure.storage.container-name}") private val containerName: String? = null,
+    @Value("\${environment}") private val environment: String,
 ) {
+
+    private val log = LoggerFactory.getLogger(BlobService::class.java)
 
     private val blobContainerClient: BlobContainerClient =
         BlobServiceClientBuilder().connectionString(connectionString).buildClient()
             .getBlobContainerClient(containerName)
+            .also {
+                it.createIfNotExists()
+                log.info("BlobService: initialized blob client for container '$containerName' in '$environment' environment")
+            }
 
     fun uploadFile(file64: String): String {
-        // Log the first 100 characters to debug format issues
-        println("Attachment data prefix: ${file64.take(100)}")
-        
-        // Parse the attachment - support both formats:
-        // 1. Data URL format: "data:image/png;base64,iVBORw0KGgo..."
-        // 2. Legacy format: "image/png.iVBORw0KGgo..." or "image:png.iVBORw0KGgo..."
+        log.debug("uploadFile: data prefix: ${file64.take(100)}")
+
         val (mimeType, base64Data) = parseAttachment(file64)
-        
-        println("Attempting to upload file with MIME type: $mimeType")
-        
+        log.debug("uploadFile: parsed MIME type '$mimeType'")
+
         if (mimeType !in ALLOWED_MIME_TYPES) {
-            println("Rejected file with unsupported MIME type: $mimeType")
+            log.warn("uploadFile: rejected unsupported MIME type '$mimeType'")
             throw Exception("Invalid file type: $mimeType. Allowed types: JPEG, PNG, or PDF")
         }
 
         val bytearray: ByteArray = try {
             Base64.getDecoder().decode(base64Data)
         } catch (e: Exception) {
-            println("ERROR: Failed to decode base64 data: ${e.message}")
+            log.error("uploadFile: failed to decode base64 data: ${e.message}", e)
             throw Exception("Failed to decode attachment: ${e.message}")
         }
-        println("Original file size: ${bytearray.size} bytes")
-        
-        // Resize images, keep PDFs as-is
+        log.debug("uploadFile: original size ${bytearray.size} bytes")
+
         val file: ByteArray = if (mimeType.startsWith("image/")) {
             try {
                 resizeImage(bytearray, mimeType.split("/")[1])
             } catch (e: Exception) {
-                println("Error resizing image: ${e.message}")
+                log.error("uploadFile: failed to resize image: ${e.message}", e)
                 throw Exception("Failed to process image: ${e.message}")
             }
         } else {
             bytearray
         }
-        
-        println("Processed file size: ${file.size} bytes")
+
+        log.debug("uploadFile: processed size ${file.size} bytes")
 
         if (file.size > maxFileSize) {
             throw Exception("File size is too large: ${file.size} bytes (max: $maxFileSize bytes)")
@@ -82,7 +84,7 @@ class BlobService(
         val blobClient = blobContainerClient.getBlobClient(filename)
         blobClient.upload(file.inputStream(), file.size.toLong())
 
-        println("Uploaded file: $filename")
+        log.info("BlobService.uploadFile: uploaded '$filename'")
         return filename
     }
 
