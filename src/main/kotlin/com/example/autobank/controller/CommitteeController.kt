@@ -36,6 +36,7 @@ class CommitteeController(
             val userandcommittees = committeeService.getUserAndCommittees()
             ResponseEntity.ok(userandcommittees)
         } catch (e: Exception) {
+            e.printStackTrace()
             ResponseEntity.badRequest().build()
         }
     }

@@ -12,4 +12,5 @@ class Auth0User(
     val email: String,
     @NotNull
     val name: String,
+    val imageUrl: String? = null, 
 )
