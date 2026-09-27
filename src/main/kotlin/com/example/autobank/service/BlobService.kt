@@ -8,12 +8,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
 import java.util.*
 
 val ALLOWED_MIME_TYPES = listOf("image/jpeg", "image/png", "application/pdf", "image/jpg")
 const val imageResizeWidth = 1000
 const val imageResizeHeight = 800
 const val maxFileSize = 5 * 1024 * 1024
+const val maxImageLongestSide = 2400
+const val jpegQuality = 0.85f
 
 @Service
 class BlobService(
@@ -123,17 +126,34 @@ class BlobService(
     }
 
     private fun resizeImage(imageData: ByteArray, type: String): ByteArray {
+        val longestSide = getLongestSide(imageData) ?: throw Exception("Could not read image data")
+        if (longestSide <= maxImageLongestSide) return imageData
         ByteArrayInputStream(imageData).use { inputStream ->
             ByteArrayOutputStream().use { outputStream ->
-                Thumbnails.of(inputStream)
-                    .size(imageResizeWidth, imageResizeHeight)
-                    .keepAspectRatio(true)
-                    .outputFormat(type)
-                    .toOutputStream(outputStream)
-
+                val builder = Thumbnails.of(inputStream)
+                .size(maxImageLongestSide, maxImageLongestSide)
+                .keepAspectRatio(true)
+                .outputFormat(type)
+                if (type == "jpeg" || type == "jpg"){
+                    builder.outputQuality(jpegQuality)
+                }
+                builder.toOutputStream(outputStream)
                 return outputStream.toByteArray()
             }
         }
+    }
+
+    private fun getLongestSide(imageData: ByteArray): Int? {
+        ImageIO.createImageInputStream(ByteArrayInputStream(imageData))?.use { input -> 
+            val reader = ImageIO.getImageReaders(input).asSequence().firstOrNull() ?: return null
+            try {
+                reader.input = input
+                return maxOf(reader.getWidth(0), reader.getHeight(0))
+            } finally {
+                reader.dispose()
+            }
+        }
+        return null
     }
 
     fun downloadImage(fileName: String): String {
