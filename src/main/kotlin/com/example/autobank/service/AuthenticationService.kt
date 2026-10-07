@@ -80,7 +80,7 @@ class AuthenticationService(
             val sub = getUserSub()
             // Return mock/minimal user data for local dev
             // Switch mail to your own email to avoid confusion when testing
-            return Auth0User(sub, "online.appkom@gmail.com", "Dev User", null)
+            return Auth0User(sub, "adelestrysse@gmail.com", "Dev User")
         }
 
         val endpoint = UriComponentsBuilder
@@ -107,7 +107,7 @@ class AuthenticationService(
         val user = response.body?.result?.data?.json
             ?: throw Exception("User not found")
 
-        return Auth0User(user.id, user.email, user.name, user.imageUrl)
+        return Auth0User(user.id, user.email, user.name)
     }
 
     fun fetchUserCommittees(): List<String> {
@@ -216,7 +216,6 @@ class AuthenticationService(
         data class User(
             val id: String,
             val email: String,
-            val name: String,
-            val imageUrl: String? = null,
+            val name: String
         )
 }

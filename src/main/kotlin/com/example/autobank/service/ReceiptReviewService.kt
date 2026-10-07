@@ -13,12 +13,12 @@ import org.springframework.stereotype.Service
 class ReceiptReviewService(
     private val receiptReviewRepository: ReceiptReviewRepository,
     private val onlineUserService: OnlineUserService,
-    private val receiptRepository: ReceiptRepository
+    private val receiptRepository: ReceiptRepository,
+    private val mailService: MailService
 ) {
 
     fun createReceiptReview(receiptReview: ReceiptReviewRequestBody): ReceiptReviewResponseBody {
         val onlineuser = onlineUserService.getOnlineUser() ?: throw Exception("User not found")
-
 
         if (receiptReview.status != "APPROVED" && receiptReview.status != "DENIED") {
             throw Exception("Invalid status")
@@ -31,6 +31,25 @@ class ReceiptReviewService(
         }
 
         val savedReview = receiptReviewRepository.save(ReceiptReview("", receipt, enumValueOf<ReceiptStatus>(receiptReview.status), receiptReview.comment, onlineuser, null))
+
+        val statusText = when (savedReview.status) {
+            ReceiptStatus.DENIED -> "Avvist"
+            ReceiptStatus.APPROVED -> "Godkjent"
+        }
+
+        mailService.sendEmail(
+            toEmail = receipt.user.email,
+            subject = "Kvitteringen din '${receipt.name}' er ${statusText.lowercase()}",
+            htmlBody = """
+                <p>Kvitteringen din med navn <strong>${receipt.name}</strong> har en oppdatering.</p>
+                
+                <p>
+                   <strong>Status:</strong> ${statusText}<br>
+                   <strong>Kommentar:</strong> ${savedReview.comment}
+                </p>
+                <p>For flere detaljer, gå inn på: <a href="https://autobank.online.ntnu.no/minside">Autobank</a></p>
+            """.trimIndent(),
+        )
 
         return ReceiptReviewResponseBody(
             id = savedReview.id,

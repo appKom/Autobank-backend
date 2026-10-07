@@ -2,7 +2,6 @@ package com.example.autobank.service
 
 import com.example.autobank.data.ReceiptReviewRequestBody
 import com.example.autobank.data.models.*
-import com.example.autobank.data.receipt.ReceiptReviewResponseBody
 import com.example.autobank.data.user.OnlineUser
 import com.example.autobank.repository.receipt.ReceiptRepository
 import com.example.autobank.repository.receipt.ReceiptReviewRepository
@@ -22,7 +21,12 @@ class ReceiptReviewServiceTest : FunSpec({
     val onlineUserService = mockk<OnlineUserService>()
     val receiptRepository = mockk<ReceiptRepository>()
     
-    val receiptReviewService = ReceiptReviewService(receiptReviewRepository, onlineUserService, receiptRepository)
+    val receiptReviewService = ReceiptReviewService(
+        receiptReviewRepository,
+        onlineUserService,
+        receiptRepository,
+        mailService
+    )
 
     context("createReceiptReview") {
         test("should create new receipt review successfully") {
