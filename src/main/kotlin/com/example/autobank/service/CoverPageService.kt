@@ -115,7 +115,7 @@ class CoverPageService {
                 cs.beginText()
                 cs.setFont(regularFont, 11f)
                 cs.newLineAtOffset(valueX, y)
-                cs.showText(value)
+                cs.showText(safePDF(value, regularFont, false))
                 cs.endText()
 
                 y -= lineSpacing
@@ -133,7 +133,7 @@ class CoverPageService {
 
             // Wrap comment text across multiple lines
             val maxLineWidth = pageWidth - margin * 2
-            for (line in wrapText(data.comment, regularFont, 11f, maxLineWidth)) {
+            for (line in wrapText(safePDF(data.comment, regularFont, true), regularFont, 11f, maxLineWidth)) {
                 cs.beginText()
                 cs.setFont(regularFont, 11f)
                 cs.newLineAtOffset(labelX, y)
@@ -187,6 +187,29 @@ class CoverPageService {
         val digits = accountNumber.replace(" ", "").replace(".", "")
         if (digits.length != 11) return accountNumber
         return "${digits.substring(0, 4)} ${digits.substring(4, 6)} ${digits.substring(6, 11)}"
+    }
+
+    private fun safePDF(text: String, font: PDType1Font, keepNewLines: Boolean): String {
+        val stringBuilder = StringBuilder()
+        var i = 0
+        while (i < text.length){
+            val cp = text.codePointAt(i)
+            i += Character.charCount(cp)
+            when {
+                cp == '\n'.code && keepNewLines -> stringBuilder.append('\n')
+                Character.isWhitespace(cp) || Character.isSpaceChar(cp) -> stringBuilder.append(' ')
+                else -> {
+                    val ch = String(Character.toChars(cp))
+                    try {
+                        font.encode(ch)
+                        stringBuilder.append(ch)
+                    } catch (e: Exception) {
+                        stringBuilder.append('?')
+                    }
+                }
+            }
+        }
+        return stringBuilder.toString()
     }
 
     private fun wrapText(text: String, font: PDType1Font, fontSize: Float, maxWidth: Float): List<String> {
