@@ -15,6 +15,7 @@ val ALLOWED_MIME_TYPES = listOf("image/jpeg", "image/png", "application/pdf", "i
 const val imageResizeWidth = 1000
 const val imageResizeHeight = 800
 const val maxFileSize = 5 * 1024 * 1024
+const val maxTotalFilesSize = 6 * 1024 * 1024
 const val maxImageLongestSide = 2400
 const val jpegQuality = 0.85f
 

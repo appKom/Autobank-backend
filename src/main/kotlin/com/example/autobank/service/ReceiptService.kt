@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import com.example.autobank.service.MailService
+import com.example.autobank.service.maxTotalFilesSize
 
 @Service
 class ReceiptService(
@@ -63,13 +64,20 @@ class ReceiptService(
             account_number = accountnumber
 
         )
+            val attachments = receiptRequestBody.attachments
+            var totalFilesBytes = 0L
+            attachments.forEach { attachment -> 
+                totalFilesBytes += attachment.substringAfter("base64,").length.toLong() * 3 / 4
+            }
+            if (totalFilesBytes > maxTotalFilesSize){
+                throw Exception("Total attachment size must be below $maxTotalFilesSize")
+            }
 
             val storedReceipt = receiptRepository.save(receipt)
 
             /**
              * Save attachments and prepare for email
              */
-            val attachments = receiptRequestBody.attachments
             val attachmentsForEmail = mutableListOf<Pair<String, ByteArray>>()
 
             try {
