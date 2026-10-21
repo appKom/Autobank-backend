@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import com.example.autobank.service.MailService
 import com.example.autobank.service.maxTotalFilesSize
+import com.example.autobank.service.maxDescriptionLength
+
+const val maxDescriptionLength = 500
 
 @Service
 class ReceiptService(
@@ -24,7 +27,6 @@ class ReceiptService(
     private val coverPageService: CoverPageService,
     @Value("\${environment}") private val environment: String
 ) {
-
 
     fun createReceipt(receiptRequestBody: ReceiptRequestBody): ReceiptResponseBody {
         val user = onlineUserService.getOnlineUser() ?: throw Exception("User not found")
@@ -72,7 +74,9 @@ class ReceiptService(
             if (totalFilesBytes > maxTotalFilesSize){
                 throw Exception("Total attachment size must be below $maxTotalFilesSize")
             }
-
+            if (receipt.description.length > maxDescriptionLength){
+                throw Exception("Receipt description must have $maxDescriptionLength or fewer characters")
+            }
             val storedReceipt = receiptRepository.save(receipt)
 
             /**
