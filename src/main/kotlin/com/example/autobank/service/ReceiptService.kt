@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import com.example.autobank.service.MailService
 import com.example.autobank.service.maxTotalFilesSize
-import com.example.autobank.service.maxDescriptionLength
 
 const val maxDescriptionLength = 500
 
