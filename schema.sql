@@ -20,7 +20,7 @@ CREATE TABLE receipt
     amount        DECIMAL(10, 2) NOT NULL,
     committee_id  UNIQUEIDENTIFIER             NOT NULL references committee (id),
     name          VARCHAR(255)   NOT NULL,
-    description   VARCHAR(500)   NOT NULL,
+    description   NVARCHAR(510)   NOT NULL,
     createdat     DATETIME       NOT NULL,
     onlineuser_id UNIQUEIDENTIFIER             NOT NULL references onlineuser (id),
     card_number VARCHAR(16) NOT NULL,

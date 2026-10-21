@@ -27,7 +27,7 @@ class Receipt(
     @Column(name = "name")
     val name: String,
 
-    @Column(name = "description")
+    @Column(name = "description", length = 510)
     val description: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
