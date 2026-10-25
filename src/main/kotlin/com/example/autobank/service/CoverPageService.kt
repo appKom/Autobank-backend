@@ -48,8 +48,11 @@ class CoverPageService {
                     else -> appendImagePage(document, filename, bytes)
                 }
             }
-
-            val outputStream = ByteArrayOutputStream()
+            var estimatedSize: Int = 0
+            for (attachment in attachments){
+                estimatedSize += attachment.second.size + 64 * 1024
+            }
+            val outputStream = ByteArrayOutputStream(estimatedSize)
             document.save(outputStream)
             return outputStream.toByteArray()
         } finally {
