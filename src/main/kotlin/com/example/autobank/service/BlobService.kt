@@ -19,6 +19,8 @@ const val maxTotalFilesSize = 6 * 1024 * 1024
 const val maxImageLongestSide = 2400
 const val jpegQuality = 0.85f
 
+data class UploadedFile(val filename: String, val bytes: ByteArray)
+
 @Service
 class BlobService(
     @Value("\${azure.storage.connection-string}") private val connectionString: String? = null,
@@ -36,7 +38,7 @@ class BlobService(
                 log.info("BlobService: initialized blob client for container '$containerName' in '$environment' environment")
             }
 
-    fun uploadFile(file64: String): String {
+    fun uploadFile(file64: String): UploadedFile {
         log.debug("uploadFile: data prefix: ${file64.take(100)}")
 
         val (mimeType, base64Data) = parseAttachment(file64)
@@ -89,7 +91,7 @@ class BlobService(
         blobClient.upload(file.inputStream(), file.size.toLong())
 
         log.info("BlobService.uploadFile: uploaded '$filename'")
-        return filename
+        return UploadedFile(filename, file)
     }
 
     /**
