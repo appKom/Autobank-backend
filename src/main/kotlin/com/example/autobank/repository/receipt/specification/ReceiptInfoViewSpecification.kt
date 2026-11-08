@@ -44,7 +44,13 @@ class ReceiptInfoViewSpecification(
         }
 
         if (!search.isNullOrEmpty()) {
-            predicates.add(cb.like(root.get<String>("name"), "%$search%"))
+            val pattern = "%${search.lowercase()}%"
+            predicates.add(
+                cb.or(
+                    cb.like(cb.lower(root.get<String>("name")), pattern),
+                    cb.like(cb.lower(userJoin.get<String>("fullname")), pattern)
+                )
+            )
         }
 
         query.distinct(true) // To avoid duplicates due to joins
