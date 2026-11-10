@@ -68,7 +68,14 @@ class ReceiptService(
             val attachments = receiptRequestBody.attachments
             var totalFilesBytes = 0L
             attachments.forEach { attachment -> 
-                totalFilesBytes += attachment.substringAfter("base64,").length.toLong() * 3 / 4
+                val index = attachment.indexOf("base64,")
+                var start: Int
+                if (index == -1){
+                    start = 0
+                } else {
+                    start = index + "base64,".length
+                }
+                totalFilesBytes += (attachment.length - start).toLong() * 3 / 4
             }
             if (totalFilesBytes > maxTotalFilesSize){
                 throw Exception("Total attachment size must be below $maxTotalFilesSize")
@@ -85,14 +92,9 @@ class ReceiptService(
 
             try {
                 attachments.forEach { file64 ->
-                    // 1. Upload to storage (this returns the generated filename with UUID)
-                    val imgname = blobService.uploadFile(file64)
-                    attachmentService.createAttachment(Attachment("", storedReceipt, imgname))
-
-                    val pureBase64 = if (file64.contains(",")) file64.split(",")[1] else file64
-                    val bytearray = java.util.Base64.getDecoder().decode(pureBase64)
-
-                    attachmentsForEmail.add(imgname to bytearray)
+                    val uploaded = blobService.uploadFile(file64)
+                    attachmentService.createAttachment(Attachment("", storedReceipt, uploaded.filename))
+                    attachmentsForEmail.add(uploaded.filename to uploaded.bytes)
                 }
             } catch (e: Exception) {
                 receiptRepository.delete(storedReceipt)

@@ -70,11 +70,15 @@ class MailService(
         message.setContent(multipart)
 
         // Convert the MimeMessage to a format AWS SES understands
-        val outputStream = ByteArrayOutputStream()
+        var estimatedSize: Int = 0
+        for (attachment in attachments){
+            estimatedSize += attachment.second.size * 3 / 2 + 64 * 1024
+        }
+        val outputStream = ByteArrayOutputStream(estimatedSize)
         message.writeTo(outputStream)
 
         val rawMessage = RawMessage.builder()
-            .data(SdkBytes.fromByteArray(outputStream.toByteArray()))
+            .data(SdkBytes.fromByteArrayUnsafe(outputStream.toByteArray()))
             .build()
 
         val request = SendRawEmailRequest.builder()

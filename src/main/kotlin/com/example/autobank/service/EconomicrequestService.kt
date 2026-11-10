@@ -59,7 +59,7 @@ class EconomicrequestService(
 
         try {
             requestBody.attachments.forEach { file64 ->
-                val imgname = blobService.uploadFile(file64)
+                val imgname = blobService.uploadFile(file64).filename
                 economicrequestAttachmentRepository.save(
                     EconomicRequestAttachment("", storedRequest, imgname)
                 )
