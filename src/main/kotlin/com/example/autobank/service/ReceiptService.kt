@@ -24,6 +24,7 @@ class ReceiptService(
     private val receiptInfoRepository: ReceiptInfoRepositoryImpl,
     private val mailService: MailService,
     private val coverPageService: CoverPageService,
+    private val receiptReviewRepository: ReceiptReviewRepository,
     @Value("\${environment}") private val environment: String
 ) {
 
@@ -231,7 +232,8 @@ class ReceiptService(
             receipt.latestReviewComment,
             receipt.accountNumber ?: "",
             receipt.cardUsed ?: "",
-            files
+            files,
+            receiptReviewRepository.findReviewerNameByReceiptId(receipt.receiptId)
         )
 
 
