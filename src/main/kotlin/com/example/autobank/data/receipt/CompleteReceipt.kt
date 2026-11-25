@@ -33,7 +33,9 @@ data class CompleteReceipt(
 
     val cardUsed: String,
 
-    val attachments: List<String>
+    val attachments: List<String>,
+
+    val latestReviewerName: String? = null
 
 
 
